@@ -55,21 +55,43 @@ export function setVoicePreferences(accent: 'latino' | 'castellano', speed: 'len
   speechSpeed = speed;
 }
 
+let activeUtterance: SpeechSynthesisUtterance | null = null;
+
 /**
  * Pronounce Spanish text using SpeechSynthesis
  */
 export function speakSpanish(text: string, onEnd?: () => void) {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    if (onEnd) onEnd();
+    return;
+  }
+
+  try {
+    window.speechSynthesis.cancel();
+  } catch {
+    // Ignore cancel failure
+  }
 
   const utterance = new SpeechSynthesisUtterance(text);
+  activeUtterance = utterance; // Keep active reference to prevent GC drops
+
   utterance.lang = voiceAccent === 'castellano' ? 'es-ES' : 'es-MX';
   utterance.rate = speechSpeed === 'lenta' ? 0.75 : 0.9;
   utterance.pitch = 1.05; // Slightly warmer child-friendly pitch
 
-  if (onEnd) {
-    utterance.onend = onEnd;
-  }
+  let ended = false;
+  const finish = () => {
+    if (ended) return;
+    ended = true;
+    activeUtterance = null;
+    if (onEnd) onEnd();
+  };
+
+  utterance.onend = finish;
+  utterance.onerror = (e) => {
+    console.warn('SpeechSynthesis event:', e.error);
+    finish();
+  };
 
   // Pick best available Spanish voice if possible
   const voices = window.speechSynthesis.getVoices();

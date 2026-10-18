@@ -105,6 +105,7 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
   const [unlockedNextWorldTitle, setUnlockedNextWorldTitle] = useState<string | null>(null);
   const [autoCountdown, setAutoCountdown] = useState<number | null>(null);
   const [shakingCard, setShakingCard] = useState<string | null>(null);
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Daily tracker state
@@ -162,6 +163,7 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
     const ex = ALPHABET_DATA[exerciseIndex] || ALPHABET_DATA[0];
     setCurrentSixOptions(generateShuffledSixOptions(ex.missingSyllable, ex.distractors));
     setTargetFilled(false);
+    setIsAdvancing(false);
     setShowVictoryModal(false);
     setPoppedBubbles([]);
     setMatchedWordSelected(null);
@@ -243,15 +245,69 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
 
   // MODE 1: Construye la palabra
   const handleSelectSyllable = (syllable: string) => {
+    if (targetFilled || isAdvancing) return;
+
     if (syllable.toUpperCase() === currentExercise.missingSyllable.toUpperCase()) {
+      // 1. Poner la letra/sílaba en el espacio en blanco de inmediato
       setTargetFilled(true);
+      setIsAdvancing(true);
       playPop(580);
-      triggerVictory(`¡Excelente! ¡${currentExercise.exampleWord}!`);
+      triggerHaptic([30, 40]);
+
+      // Guardar progreso y sumar estrellas
+      const updatedDaily = markWorldCompletedToday(currentWorld.id);
+      markExerciseCompletedToday(`world-${currentWorld.id}-${activeMode}`);
+      setDailyProgress(updatedDaily);
+      markWordLearned(currentExercise.exampleWord);
+      onAddStars(10);
+
+      // Confeti festivo
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ['#f59e0b', '#6cf8bb', '#42bbff', '#ffd0bb'],
+      });
+
+      // 2. Reproducir el sonido de la palabra que se está formando
+      const wordToPronounce = currentExercise.exampleWord;
+
+      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+
+      speakSpanish(wordToPronounce, () => {
+        // 3. Decir luego que está correcto con fanfarria y sonido
+        playSparkleChime();
+        triggerHaptic([40, 50, 80]);
+
+        speakSpanish('¡Correcto! ¡Muy bien!', () => {
+          // 4. Pasar al siguiente ejercicio tras escuchar la confirmación
+          autoTimerRef.current = setTimeout(() => {
+            setIsAdvancing(false);
+            if (currentPosInFiltered >= filteredExercises.length - 1) {
+              triggerVictory('¡Completaste toda la familia de palabras! ¡Eres genial!');
+            } else {
+              handleNextWord();
+            }
+          }, 600);
+        });
+      });
+
+      // Temporizador de respaldo por si el navegador no dispara onend de SpeechSynthesis
+      autoTimerRef.current = setTimeout(() => {
+        setIsAdvancing(false);
+        if (currentPosInFiltered >= filteredExercises.length - 1) {
+          triggerVictory('¡Completaste toda la familia de palabras! ¡Eres genial!');
+        } else {
+          handleNextWord();
+        }
+      }, 4000);
+
     } else {
+      // Sílaba o letra incorrecta
       playWiggleError();
       triggerHaptic([50, 40, 50]);
       setShakingCard(syllable);
-      speakSpanish('¡Casi! Escucha bien e intenta otra vez');
+      speakSpanish(`Esa es ${syllable}. Escucha bien e intenta otra vez.`);
       setTimeout(() => setShakingCard(null), 500);
     }
   };
@@ -377,6 +433,7 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
   const handleNextWord = () => {
     if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
     setAutoCountdown(null);
+    setIsAdvancing(false);
     playPop(480);
     triggerHaptic(20);
     setShowVictoryModal(false);
@@ -680,6 +737,30 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
                 <span className="text-[11px] text-[#534434] font-bold">Base</span>
               </div>
             </div>
+            {/* Target Filled Word Celebration Banner */}
+            {targetFilled && (
+              <div className="w-full max-w-[320px] bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-100 border-2 border-emerald-400 text-emerald-900 rounded-2xl p-2.5 mt-2.5 flex items-center justify-between shadow-md animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl animate-bounce">⭐</span>
+                  <div>
+                    <span className="text-xs font-black block text-emerald-800">
+                      ¡{currentExercise.exampleWord}! ¡Correcto!
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-600">
+                      +10 estrellas ganadas
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={handleNextWord}
+                  type="button"
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black rounded-xl shadow-xs cursor-pointer flex items-center gap-1"
+                >
+                  <span>Siguiente</span>
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 6 Randomized Option Chips */}
@@ -693,22 +774,35 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
               {currentSixOptions.map((syl, optIdx) => {
                 const isTarget = syl.toUpperCase() === currentExercise.missingSyllable.toUpperCase();
                 const isShaking = shakingCard === syl;
+                const isSelectedCorrect = targetFilled && isTarget;
+
                 return (
                   <button
                     key={`${syl}-${optIdx}`}
                     onClick={() => handleSelectSyllable(syl)}
-                    disabled={targetFilled && isTarget}
+                    disabled={targetFilled || isAdvancing}
                     type="button"
-                    className={`h-20 bg-white rounded-2xl flex flex-col items-center justify-center p-1 transition-all cursor-pointer border-2 ${
-                      isShaking ? 'translate-x-2 border-red-400 bg-red-50' : 'border-[#ffdbcc]'
-                    } ${
-                      targetFilled && isTarget
-                        ? 'opacity-40 pointer-events-none'
-                        : 'shadow-[0_5px_0_0_#ffb95f] active:translate-y-1 active:shadow-[0_1px_0_0_#ffb95f]'
+                    className={`h-20 rounded-2xl flex flex-col items-center justify-center p-1 transition-all cursor-pointer border-2 relative ${
+                      isShaking
+                        ? 'translate-x-2 border-red-400 bg-red-50'
+                        : isSelectedCorrect
+                        ? 'bg-emerald-100 border-emerald-500 text-emerald-800 shadow-[0_4px_0_0_#10b981] scale-95 font-black ring-2 ring-emerald-300'
+                        : targetFilled || isAdvancing
+                        ? 'bg-white/70 border-[#ffd0bb] opacity-50 pointer-events-none'
+                        : 'bg-white border-[#ffdbcc] shadow-[0_5px_0_0_#ffb95f] active:translate-y-1 active:shadow-[0_1px_0_0_#ffb95f]'
                     }`}
                   >
-                    <span className="text-2xl font-black text-[#613b00]">{syl}</span>
-                    <span className="text-[10px] text-[#f59e0b] font-bold mt-0.5">/{syl.toLowerCase()}/</span>
+                    {isSelectedCorrect && (
+                      <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[11px] font-black shadow-xs">
+                        ✓
+                      </span>
+                    )}
+                    <span className={`text-2xl font-black ${isSelectedCorrect ? 'text-emerald-800' : 'text-[#613b00]'}`}>
+                      {syl}
+                    </span>
+                    <span className={`text-[10px] font-bold mt-0.5 ${isSelectedCorrect ? 'text-emerald-600' : 'text-[#f59e0b]'}`}>
+                      /{syl.toLowerCase()}/
+                    </span>
                   </button>
                 );
               })}

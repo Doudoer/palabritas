@@ -7,10 +7,10 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.4 - Invalidación de Caché PWA, Workbox SkipWaiting y Auto-Update`
-- **Hash de Commit:** `83e4960` (y posteriores)
-- **Estado General:** ✅ Producción Estable, Caché PWA invalidada automáticamente, Contenedores local y VPS recreados con nuevo bundle (`index-L9U1XrvF.js`).
-- **Pruebas Automatizadas:** 4,500 aserciones ejecutadas (0 errores, 0 advertencias) + `tsc --noEmit` en pipeline.
+## 📌 Checkpoint Actual: `v0.1.5 - Sonido de Palabra Formada, Afirmación '¡Correcto!' y Auto-Avance Fluido`
+- **Hash de Commit:** Pendiente de push a `origin/main`
+- **Estado General:** ✅ Producción Estable. Colocación inmediata de sílaba/letra, pronunciación de la palabra formada (`speakSpanish(word)`), chime musical y afirmación vocal (`"¡Correcto! ¡Muy bien!"`), avance automático de ejercicio y banner festivo con salto rápido.
+- **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía completadas (0 fallos) + `tsc --noEmit` limpio + Docker build exitoso.
 
 ---
 
@@ -95,6 +95,17 @@
   2. **Auto-Recarga en [src/main.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/main.tsx):** Se configuró `onNeedRefresh() => updateSW(true)` para que el navegador actualice de forma inmediata y automática cuando detecte una nueva versión del juego.
   3. **Cabeceras HTTP en [nginx.conf](file:///Users/user/Desktop/palabritas%20v0.1/nginx.conf):** Se añadieron cabeceras `Cache-Control: no-store, no-cache, must-revalidate, max-age=0` tanto a `/` (`index.html`) como a `sw.js` y `workbox-*.js`, evitando que los navegadores mantengan HTMLs apuntando a hashes viejos.
   4. **Recreación Total de Contenedores:** Reconstrucción limpia y reinicio con el nuevo bundle `index-L9U1XrvF.js` tanto en la máquina local (`localhost:3000`) como en el VPS Hetzner (`167.235.21.59`).
+
+### Paso 7: Sonido de Palabra Formada, Afirmación "¡Correcto!" y Avance Automático Fluido
+- **Comportamiento Táctil y Fonético:**
+  1. Al presionar la ficha correcta entre las 6 opciones (ej. `ES` para `Estrella`):
+     - La letra/sílaba se ubica inmediatamente en el espacio en blanco `[ ? ]` con animación de pop táctil (`playPop(580)`), efecto vibratorio y confeti.
+     - La ficha seleccionada se resalta en verde con una marca de verificación `✓` y las demás opciones quedan suavemente deshabilitadas para evitar pulsaciones erráticas.
+  2. **Pronunciación Fonética de la Palabra:** Se reproduce el sonido nítido de la palabra que se acaba de formar (`speakSpanish(currentExercise.exampleWord)`).
+  3. **Afirmación Auditiva y Sonora:** Al terminar de pronunciar la palabra, suena un arpegio brillante de estrellitas (`playSparkleChime()`) y la voz afirma: *"¡Correcto! ¡Muy bien!"*.
+  4. **Pase Automático al Siguiente Ejercicio:** Una vez escuchada la confirmación, el juego avanza automáticamente al siguiente reto sin interrumpir al niño con modales invasivos de cuenta regresiva (reservando las pantallas de victoria completa para el fin de la familia de palabras). Además, se añadió un banner festivo inferior con botón directo *"Siguiente ➔"* para saltar de inmediato si el niño lo desea.
+  5. **Prevención de Errores Fonéticos:** Si el niño presiona una ficha incorrecta, la ficha tiembla en rojo (`shakingCard`), emite un sonido sutil de error (`playWiggleError()`), la voz le indica qué letra pulsó (`"Esa es TU. Escucha bien e intenta otra vez"`) y el espacio en blanco se mantiene libre para un nuevo intento.
+  6. **Prevención de Pérdida de Utterances (Garbage Collection Fix):** Se protegió la instancia de `SpeechSynthesisUtterance` a nivel de módulo en [src/utils/audio.ts](file:///Users/user/Desktop/palabritas%20v0.1/src/utils/audio.ts) con temporizador de seguridad (4s) para garantizar que los callbacks `onend` nunca se pierdan en navegadores móviles (Chrome/Safari).
 
 ---
 
