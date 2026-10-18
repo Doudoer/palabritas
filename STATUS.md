@@ -7,10 +7,10 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.6 - Arquitectura de Aventura por Mundos, 4 Estaciones Obligatorias y Navegación Simplificada para Niños de 6 y 7 Años`
-- **Hash de Commit:** `5b85af6` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
-- **Estado General:** ✅ Producción Estable. Reestructuración completa orientada a Mundos: Cada mundo cuenta con su aventura guiada lineal de 4 estaciones indispensables (1. Trazos de 4 letras en Mayúscula + 4 en Minúscula sin bucle infinito, 2. Escritura a mano en pauta Montessori, 3. Completación de sílabas con feedback fonético e instantáneo "¡Correcto!", 4. Lección de lectura decodificable). Desbloqueo estricto del mundo siguiente al completar las 4 estaciones. Se simplificó la barra de navegación inferior a 3 botones táctiles intuitivos para niños (Mundos, Cuentos, Premios).
-- **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía completadas (0 fallos) + `tsc --noEmit` limpio + Docker build exitoso.
+## 📌 Checkpoint Actual: `v0.1.7 - Diagnóstico y Reparación Integral del Motor de Audio y Síntesis de Voz (Web Audio API & Web Speech API)`
+- **Hash de Commit:** Pendiente de commit (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
+- **Estado General:** ✅ Producción Estable. Se diagnosticó y resolvió de raíz la causa por la cual la aplicación se quedaba sin audio. Se implementó una arquitectura de audio blindada con desbloqueo proactivo en el primer gesto de usuario (resolviendo la política de Autoplay de navegadores), eliminación de la carrera asíncrona de `speechSynthesis.cancel()` en Chromium, recuperación automática ante congelamientos con watchdog, retención global contra Garbage Collection prematuro y caché de voces en español (`es-MX`, `es-419`, `es-ES`).
+- **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía (0 fallos) + 4 pruebas de caligrafía infantil (4/4 pasando) + `tsc --noEmit` limpio + Docker build exitoso.
 
 ---
 
@@ -160,6 +160,26 @@
      - Se agregaron `touch-none` y `{ passive: false }` con `e.preventDefault()` en `touchmove` en todos los lienzos de dibujo (`MundoAdventureScreen`, `TrazosScreen`, `ConstruyeScreen`, `EscribeScreen`), eliminando rebotes o desplazamientos involuntarios de la pantalla mientras el niño dibuja.
   7. **Suite de Pruebas Automatizadas:**
      - Se creó [scripts/test-calligraphy-validator.ts](file:///Users/user/Desktop/palabritas%20v0.1/scripts/test-calligraphy-validator.ts) con 4/4 pruebas unitarias de caligrafía infantil pasando al 100%.
+
+### Paso 11: Diagnóstico de Raíz y Solución Integral del Sistema de Audio y Síntesis de Voz
+- **¿Por qué la app se quedó sin audio? (Diagnóstico Forense):**
+  1. **Carrera Asíncrona `speechSynthesis.cancel()` en Chromium:**
+     En el commit `0c99506`, se introdujo `window.speechSynthesis.cancel()` justo antes de `speak(utterance)`. En Chrome, Edge y Android WebView, `cancel()` es una llamada asíncrona por IPC al servicio de accesibilidad del sistema operativo. Al llamar a `speak()` en el mismo tick síncrono, la orden de cancelación borraba la locución recién encolada y disparaba `onerror` con `'interrupted'`, silenciando la app.
+  2. **Bloqueo/Congelamiento del Motor de Síntesis:**
+     Cuando una locución es cancelada o interrumpida en Chromium, el motor con frecuencia queda en estado `paused === true` o con la cola atascada (`speaking === true`). Cualquier llamada subsiguiente a `speakSpanish()` se encolaba silenciosamente en el navegador sin sonar nunca hasta recibir un `resume()` explícito.
+  3. **Política de Autoplay de Navegadores (AudioContext Suspendido):**
+     Tanto en Chrome como en Safari/iOS, los contextos de Web Audio inician en estado `'suspended'`. Si un sonido o fanfarria se disparaba desde transiciones de pantalla o temporizadores fuera de un evento de interacción directo del usuario, el navegador silenciaba el audio.
+  4. **Carga Asíncrona de Voces (`getVoices()` vacío):**
+     En Chrome/Android, `speechSynthesis.getVoices()` devuelve un arreglo vacío `[]` al inicio hasta que se dispara el evento `voiceschanged`. Sin caché de voces, el navegador intentaba reproducir sin voz asignada o caía en voces no compatibles con español.
+  5. **Recolección Prematura de Basura (Chromium Bug 289725):**
+     V8 destruye instancias de `SpeechSynthesisUtterance` a mitad de la reproducción si no se mantiene una referencia en el objeto global `window`.
+- **Solución Implementada en [src/utils/audio.ts](file:///Users/user/Desktop/palabritas%20v0.1/src/utils/audio.ts):**
+  - **Desbloqueador Proactivo en Primer Gesto:** Se agregaron listeners pasivos en `pointerdown`, `touchstart`, `mousedown` y `keydown` que ejecutan `unlockAudio()`, reanudan el `AudioContext`, reproducen un micro-buffer silencioso para satisfacer WebKit/iOS Safari, y despiertan el motor de voz si estaba en pausa.
+  - **Caché Inteligente de Voces:** Listener en `window.speechSynthesis.onvoiceschanged` con selección prioritaria de dialectos hispanohablantes (`es-MX`, `es-419`, `es-US`, `es-CO`, `es-ES`).
+  - **Cola Segura contra Carrera Asíncrona:** Si el motor está hablando, se cancela la locución previa y se pospone la nueva mediante un retraso seguro de 40ms (`setTimeout`), permitiendo al sistema operativo vaciar la cola antes de recibir el nuevo texto.
+  - **Watchdog de Recuperación y Descongelamiento:** Intervalo de vigilancia de 5s que detecta si el navegador pausó la locución y ejecuta `window.speechSynthesis.resume()`.
+  - **Retención Global en `window.__palabritasUtterance`:** Previene la recolección prematura de basura por el motor JavaScript.
+  - **Temporizador de Respaldo Garantizado:** Se garantiza que el callback `onEnd` se ejecute siempre (`Math.max(2200, text.length * 130)`), evitando que los flujos de juego se queden colgados si el navegador no dispara `onend`.
 
 ---
 
