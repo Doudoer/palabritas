@@ -124,6 +124,7 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
     };
 
     const draw = (e: MouseEvent | TouchEvent) => {
+      if ('touches' in e && e.cancelable) e.preventDefault();
       if (!isDrawingRef.current) return;
       const rect = canvas.getBoundingClientRect();
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
@@ -145,8 +146,8 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
     canvas.addEventListener('mousemove', draw);
     window.addEventListener('mouseup', stopDrawing);
 
-    canvas.addEventListener('touchstart', startDrawing, { passive: true });
-    canvas.addEventListener('touchmove', draw, { passive: true });
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
     window.addEventListener('touchend', stopDrawing);
 
     return () => {
@@ -171,9 +172,9 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
     const result = validateLetterDrawing(canvas, {
       svgPath: pathString,
       letterChar,
-      toleranceRadius: 26,
-      minCoverageThreshold: 0.50, // 50% mínimo para validar
-      maxScribbleRatio: 0.42, // Máximo 42% de garabatos fuera
+      toleranceRadius: 40,
+      minCoverageThreshold: 0.16,
+      maxScribbleRatio: 0.70,
     });
 
     setValidationResult(result);

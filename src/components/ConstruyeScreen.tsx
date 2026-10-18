@@ -368,9 +368,9 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
     const result = validateLetterDrawing(canvas, {
       svgPath: currentExercise.upperPath,
       letterChar: currentExercise.letter,
-      toleranceRadius: 28,
-      minCoverageThreshold: 0.48,
-      maxScribbleRatio: 0.44,
+      toleranceRadius: 40,
+      minCoverageThreshold: 0.16,
+      maxScribbleRatio: 0.70,
     });
 
     setTrazoFeedback(result);
@@ -387,6 +387,7 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if ('touches' in e && (e as any).cancelable) (e as any).preventDefault();
     if (!isDrawing && e.type !== 'mousedown' && e.type !== 'touchstart') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -397,10 +398,12 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
 
-    ctx.lineWidth = 14;
+    ctx.lineWidth = 20;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = '#f59e0b';

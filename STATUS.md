@@ -128,6 +128,39 @@
        - 📚 **Cuentos**: Biblioteca de lectura para repasar y disfrutar de las historias mágicas ilustradas.
        - 🏆 **Premios**: Álbum de cromos, stickers y estrellas coleccionables.
 
+### Paso 10: Calibración y Flexibilización del Motor de Escritura a Mano para Niños de 6 y 7 Años
+- **Problema Detectado por el Usuario:**
+  - *"La escritura a mano no debe ser tan estricta porque está dando mucho problema, hay veces que se escribe bien y detecta mal la escritura".*
+  - Los niños realizaban trazos genuinos y legibles pero el validador los rechazaba erróneamente con mensajes de *"Uy, hay muchos garabatos"* o *"Casi lo logras, repasa más"*, causando frustración.
+- **Causas Raíces Técnicas Diagnosticadas:**
+  1. **Desalineación Espacial Crítica (Offset de 40 a 60px):**
+     - En `MundoAdventureScreen.tsx`, el `<svg>` de guía visual tenía la clase `p-4` (padding de 16px) y `viewBox="0 0 280 300"` dentro de un contenedor `aspect-[4/3]`, mientras que el `<canvas>` de dibujo medía `360x270` sin padding.
+     - El generador de máscara `getLetterTargetPoints` pintaba el path SVG crudo en coordenadas absolutas sin considerar el padding `p-4` ni la escala del viewBox, desplazando el objetivo virtual hasta 60px a la izquierda de lo que el niño veía en pantalla. Por lo tanto, trazos perfectamente dibujados caían fuera del corredor.
+  2. **Incompatibilidad de Densidad (Crayón Lineal vs Cinta Gruesa):**
+     - La silueta de referencia se generaba como una franja gruesa continua. Exigir 50% de cobertura forzaba al niño a "colorear" la letra completa como un libro para colorear en vez de trazarla con un solo pase de crayón (que abarca entre 20% y 30% del volumen total).
+  3. **Penalización por Apoyos de Palma y Gestos Naturales:**
+     - El umbral de garabato estaba fijado en 42%. Cuando los niños apoyaban la palma de la mano en la pantalla táctil de la tableta o trazaban una colita de inicio, el ratio de puntos externos superaba el 42% y el sistema los regañaba injustamente por "garabatos".
+- **Solución y Calibración Pedagógica Implementada:**
+  1. **Alineación 1:1 Píxel a Píxel en [src/components/MundoAdventureScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/MundoAdventureScreen.tsx):**
+     - Se eliminó el padding `p-4` del SVG guía y se fijó el contenedor y canvas a `280x280` cuadrado con `viewBox="0 0 280 280"` exacto.
+  2. **Centrado y Escalado Automático en [src/utils/calligraphyValidator.ts](file:///Users/user/Desktop/palabritas%20v0.1/src/utils/calligraphyValidator.ts):**
+     - `getLetterTargetPoints` ahora auto-escala y centra el `Path2D` en cualquier dimensión de canvas preservando la relación de aspecto base (`280x280`), garantizando que la máscara siempre coincida exactamente con la letra visible.
+  3. **Tolerancia Generosa y Aceptación Amorosa:**
+     - Radio de búsqueda aumentado a **40px** para letras y **44px** para palabras (~1.3 cm de margen para dedos infantiles).
+     - Cobertura mínima reducida a **16%** para letras y **15%** para palabras (suficiente para un trazo limpio y único de crayón).
+     - Umbral de garabatos relajado al **70%–72%**.
+  4. **Protección Anti-Falsos Negativos (Toques de Palma):**
+     - Si el niño recorrió la letra (`onCorridorPoints >= 18` o cobertura $\ge 16\%$), el sistema **NUNCA** lo cataloga como garabato, tolerando marcas periféricas accidentales de la palma.
+  5. **Validación Multi-Criterio para Palabras en Pauta Montessori:**
+     - El validador de palabras ahora aprueba si se cumple cualquiera de 3 caminos:
+       - *Camino A:* Cobertura $\ge 15\%$ con radio de 44px.
+       - *Camino B (Progresión Horizontal):* El trazo recorre horizontalmente $\ge 28\%$ del ancho de la palabra y $\ge 50\%$ de los puntos están dentro del renglón Montessori.
+       - *Camino C (Densidad Focalizada):* Trazos concentrados en las letras dentro del renglón (`onTargetCount >= 18`).
+  6. **Optimización Táctil en Móviles:**
+     - Se agregaron `touch-none` y `{ passive: false }` con `e.preventDefault()` en `touchmove` en todos los lienzos de dibujo (`MundoAdventureScreen`, `TrazosScreen`, `ConstruyeScreen`, `EscribeScreen`), eliminando rebotes o desplazamientos involuntarios de la pantalla mientras el niño dibuja.
+  7. **Suite de Pruebas Automatizadas:**
+     - Se creó [scripts/test-calligraphy-validator.ts](file:///Users/user/Desktop/palabritas%20v0.1/scripts/test-calligraphy-validator.ts) con 4/4 pruebas unitarias de caligrafía infantil pasando al 100%.
+
 ---
 
 ## 🧪 3. Comandos Útiles para Ejecución y Pruebas

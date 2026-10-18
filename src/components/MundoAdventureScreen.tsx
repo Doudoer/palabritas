@@ -125,12 +125,13 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.strokeStyle = selectedColor.color;
-      ctx.lineWidth = 20;
+      ctx.lineWidth = 22;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
     };
 
     const draw = (e: MouseEvent | TouchEvent) => {
+      if ('touches' in e && e.cancelable) e.preventDefault();
       if (!isDrawingRef.current) return;
       const rect = canvas.getBoundingClientRect();
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
@@ -152,8 +153,8 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
     canvas.addEventListener('mousemove', draw);
     window.addEventListener('mouseup', stopDrawing);
 
-    canvas.addEventListener('touchstart', startDrawing, { passive: true });
-    canvas.addEventListener('touchmove', draw, { passive: true });
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
     window.addEventListener('touchend', stopDrawing);
 
     return () => {
@@ -167,7 +168,7 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
     };
   }, [currentStep, selectedColor, tracingLetterIdx, isUppercase]);
 
-  // Validar trazo de letra
+  // Validar trazo de letra con parámetros pedagógicos amables
   const handleVerifyLetterTrace = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -178,9 +179,9 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
     const result = validateLetterDrawing(canvas, {
       svgPath: pathString,
       letterChar,
-      toleranceRadius: 28,
-      minCoverageThreshold: 0.46,
-      maxScribbleRatio: 0.45,
+      toleranceRadius: 40,
+      minCoverageThreshold: 0.16,
+      maxScribbleRatio: 0.70,
     });
 
     setTrazoValidation(result);
@@ -291,12 +292,13 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.strokeStyle = wordCanvasColor.color;
-      ctx.lineWidth = 14;
+      ctx.lineWidth = 16;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
     };
 
     const drawWord = (e: MouseEvent | TouchEvent) => {
+      if ('touches' in e && e.cancelable) e.preventDefault();
       if (!isWordDrawingRef.current) return;
       const rect = canvas.getBoundingClientRect();
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
@@ -318,8 +320,8 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
     canvas.addEventListener('mousemove', drawWord);
     window.addEventListener('mouseup', stopWordDrawing);
 
-    canvas.addEventListener('touchstart', startWordDrawing, { passive: true });
-    canvas.addEventListener('touchmove', drawWord, { passive: true });
+    canvas.addEventListener('touchstart', startWordDrawing, { passive: false });
+    canvas.addEventListener('touchmove', drawWord, { passive: false });
     window.addEventListener('touchend', stopWordDrawing);
 
     return () => {
@@ -337,7 +339,11 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
     const canvas = wordCanvasRef.current;
     if (!canvas) return;
 
-    const result = validateWordCalligraphy(canvas, targetWord);
+    const result = validateWordCalligraphy(canvas, targetWord, {
+      toleranceRadius: 44,
+      minCoverageThreshold: 0.15,
+      maxScribbleRatio: 0.72,
+    });
 
     setWordValidation(result);
 
@@ -646,9 +652,9 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
 
           {/* Tracing Canvas Card */}
           <div className="w-full bg-white rounded-3xl p-3 shadow-[0_8px_0_0_#ffdbcc] border-2 border-[#ffdbcc] flex flex-col items-center relative">
-            <div className="relative w-full aspect-[4/3] max-w-sm bg-[#fffcf9] rounded-2xl border-2 border-[#ffd0bb] flex items-center justify-center overflow-hidden touch-none shadow-inner">
+            <div className="relative w-full aspect-square max-w-[280px] bg-[#fffcf9] rounded-2xl border-2 border-[#ffd0bb] flex items-center justify-center overflow-hidden touch-none shadow-inner">
               {/* Montessori guide lines background */}
-              <div className="absolute inset-0 flex flex-col justify-between py-8 px-4 pointer-events-none opacity-40">
+              <div className="absolute inset-0 flex flex-col justify-between py-6 px-3 pointer-events-none opacity-40">
                 <div className="w-full border-b-2 border-rose-400"></div>
                 <div className="w-full border-b-2 border-dashed border-sky-400"></div>
                 <div className="w-full border-b-2 border-emerald-400"></div>
@@ -656,14 +662,14 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
 
               {/* SVG Reference Path Overlay */}
               <svg
-                className="absolute inset-0 w-full h-full pointer-events-none p-4"
-                viewBox="0 0 280 300"
+                className="absolute inset-0 w-full h-full pointer-events-none select-none"
+                viewBox="0 0 280 280"
               >
                 <path
                   d={isUppercase ? currentLetterExercise.upperPath : currentLetterExercise.lowerPath}
                   fill="none"
                   stroke="#ffd0bb"
-                  strokeWidth="24"
+                  strokeWidth="26"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -699,9 +705,9 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
               {/* Drawing Canvas */}
               <canvas
                 ref={canvasRef}
-                width={360}
-                height={270}
-                className="absolute inset-0 w-full h-full z-10 cursor-crosshair"
+                width={280}
+                height={280}
+                className="absolute inset-0 w-full h-full z-10 cursor-crosshair touch-none"
               />
             </div>
 

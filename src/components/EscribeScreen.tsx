@@ -299,7 +299,11 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const result = validateWordCalligraphy(canvas, currentWord.word);
+    const result = validateWordCalligraphy(canvas, currentWord.word, {
+      toleranceRadius: 44,
+      minCoverageThreshold: 0.15,
+      maxScribbleRatio: 0.72,
+    });
     setCaligrafiaFeedback(result);
 
     if (!result.isValid) {

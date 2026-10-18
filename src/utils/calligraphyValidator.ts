@@ -42,7 +42,7 @@ function getLetterTargetPoints(
 
   ctx.fillStyle = '#000000';
   ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 26; // Ancho del corredor de tolerancia para la niña
+  ctx.lineWidth = 36; // Ancho generoso del corredor de tolerancia para niños de 6-7 años
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
@@ -50,7 +50,17 @@ function getLetterTargetPoints(
   if (svgPath && typeof Path2D !== 'undefined') {
     try {
       const p = new Path2D(svgPath);
+      // Auto-escalar y centrar el SVG viewBox base (280x280) al canvas actual
+      const baseViewBox = 280;
+      const scale = Math.min(width / baseViewBox, height / baseViewBox);
+      const offsetX = (width - baseViewBox * scale) / 2;
+      const offsetY = (height - baseViewBox * scale) / 2;
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
       ctx.stroke(p);
+      ctx.restore();
       pathDrawn = true;
     } catch {
       pathDrawn = false;
@@ -80,7 +90,7 @@ function getLetterTargetPoints(
     for (let x = 0; x < width; x += step) {
       const idx = (y * width + x) * 4;
       const alpha = data[idx + 3];
-      if (alpha > 40) {
+      if (alpha > 25) {
         points.push({ x, y });
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
@@ -94,16 +104,17 @@ function getLetterTargetPoints(
 }
 
 /**
- * Valida el trazo de una letra individual (usado en TrazosScreen y ConstruyeScreen).
+ * Valida el trazo de una letra individual (usado en TrazosScreen, MundoAdventure y ConstruyeScreen).
+ * Adaptado con tolerancia pedagógica y amorosa para niños de 6 y 7 años.
  */
 export function validateLetterDrawing(
   userCanvas: HTMLCanvasElement,
   options: {
     svgPath?: string;
     letterChar?: string;
-    toleranceRadius?: number; // Radio de búsqueda alrededor de cada punto guía (default 24px)
-    minCoverageThreshold?: number; // Cobertura mínima requerida (default 52%)
-    maxScribbleRatio?: number; // Máximo porcentaje de garabatos fuera de la letra permitido (default 45%)
+    toleranceRadius?: number; // Radio de búsqueda alrededor de cada punto guía (default 40px)
+    minCoverageThreshold?: number; // Cobertura mínima requerida (default 16% para niños)
+    maxScribbleRatio?: number; // Máximo porcentaje de garabatos tolerado (default 70%)
   } = {}
 ): CalligraphyValidationResult {
   const width = userCanvas.width || 280;
@@ -124,7 +135,7 @@ export function validateLetterDrawing(
 
   const userData = userCtx.getImageData(0, 0, width, height).data;
 
-  // Extraer píxeles dibujados por la niña
+  // Extraer píxeles dibujados por el niño
   const drawnPoints: Point[] = [];
   let userDrawnPixelCount = 0;
 
@@ -134,8 +145,8 @@ export function validateLetterDrawing(
     for (let x = 0; x < width; x += sampleStep) {
       const idx = (y * width + x) * 4;
       const alpha = userData[idx + 3];
-      // Si tiene opacidad no blanca/no transparente
-      if (alpha > 30) {
+      // Si tiene opacidad perceptible
+      if (alpha > 25) {
         userDrawnPixelCount++;
         drawnPoints.push({ x, y });
       }
@@ -143,7 +154,7 @@ export function validateLetterDrawing(
   }
 
   // 1. Validar trazo vacío o toque insignificante
-  if (userDrawnPixelCount < 60) {
+  if (userDrawnPixelCount < 20) {
     return {
       isValid: false,
       status: 'empty',
@@ -165,22 +176,23 @@ export function validateLetterDrawing(
   );
 
   if (targetPoints.length === 0) {
-    // Si por alguna razón no se generaron puntos guía, ser indulgente
+    // Si no hay puntos guía, validar con éxito
     return {
       isValid: true,
       status: 'good',
-      score: 80,
-      coverage: 80,
-      precision: 80,
+      score: 85,
+      coverage: 85,
+      precision: 85,
       stars: 2,
       message: '¡Buen trazo!',
     };
   }
 
-  const toleranceRadius = options.toleranceRadius ?? 25; // 25px de tolerancia adaptada a mano infantil
+  // Tolerancia amplia de 40px (generosa para dedos pequeños de 6 y 7 años)
+  const toleranceRadius = options.toleranceRadius ?? 40;
   const toleranceSq = toleranceRadius * toleranceRadius;
 
-  // 3. Evaluar Cobertura (Recall): ¿Qué porcentaje de la letra repasó la niña?
+  // 3. Evaluar Cobertura (Recall)
   let targetPointsCovered = 0;
   for (const target of targetPoints) {
     let isCovered = false;
@@ -198,9 +210,8 @@ export function validateLetterDrawing(
   const coverageRatio = targetPointsCovered / targetPoints.length;
   const coveragePercent = Math.min(100, Math.round(coverageRatio * 100));
 
-  // 4. Evaluar Precisión (Anti-garabato): ¿Cuántos trazos están fuera de la letra?
-  // Margen de seguridad alrededor del área de la letra
-  const padding = 35;
+  // 4. Evaluar Precisión (Anti-garabato)
+  const padding = 50;
   const corridorMinX = Math.max(0, minX - padding);
   const corridorMaxX = Math.min(width, maxX + padding);
   const corridorMinY = Math.max(0, minY - padding);
@@ -208,12 +219,9 @@ export function validateLetterDrawing(
 
   let onCorridorPoints = 0;
   let strayPoints = 0;
-
-  // Un punto es "válido" si está razonablemente cerca de algún punto de la letra
-  const maxStrayDistSq = (toleranceRadius + 18) * (toleranceRadius + 18);
+  const maxStrayDistSq = (toleranceRadius + 28) * (toleranceRadius + 28);
 
   for (const drawn of drawnPoints) {
-    // Si está fuera del cuadro delimitador extendido, es garabato seguro
     if (
       drawn.x < corridorMinX ||
       drawn.x > corridorMaxX ||
@@ -224,7 +232,6 @@ export function validateLetterDrawing(
       continue;
     }
 
-    // Comprobar cercanía a algún punto de la letra
     let nearTarget = false;
     for (const target of targetPoints) {
       const dx = drawn.x - target.x;
@@ -247,11 +254,15 @@ export function validateLetterDrawing(
   const precisionPercent = Math.min(100, Math.round(precisionRatio * 100));
   const scribbleRatio = totalEvaluated > 0 ? strayPoints / totalEvaluated : 0;
 
-  const minCoverage = options.minCoverageThreshold ?? 0.50; // 50% mínimo para aprobar
-  const maxScribble = options.maxScribbleRatio ?? 0.44; // No más del 44% de garabatos perdidos
+  // Umbrales amorosos para niños de 6 a 7 años
+  const minCoverage = options.minCoverageThreshold ?? 0.16; // 16% es suficiente para un trazo lineal de lápiz/crayón
+  const maxScribble = options.maxScribbleRatio ?? 0.70; // Tolera colitas, toques de palma y desviaciones de motricidad fina
 
   // 5. Diagnóstico y Feedback Pedagógico
-  if (scribbleRatio > maxScribble) {
+  // Si el niño cubrió la letra o tiene suficientes puntos en el corredor, NUNCA se rechaza por garabato
+  const hasGoodLetterStroke = onCorridorPoints >= 18 || coverageRatio >= minCoverage;
+
+  if (!hasGoodLetterStroke && scribbleRatio > maxScribble) {
     return {
       isValid: false,
       status: 'scribble',
@@ -264,7 +275,7 @@ export function validateLetterDrawing(
     };
   }
 
-  if (coverageRatio < minCoverage) {
+  if (coverageRatio < minCoverage && onCorridorPoints < 18) {
     return {
       isValid: false,
       status: 'incomplete',
@@ -272,61 +283,57 @@ export function validateLetterDrawing(
       coverage: coveragePercent,
       precision: precisionPercent,
       stars: 0,
-      message: `¡Te falta completar la letra! Cubriste el ${coveragePercent}%.`,
-      hint: 'Sigue todas las líneas punteadas hasta completar cada parte de la letra.',
+      message: `¡Casi lo logras! Repasa un poquito más de la letra.`,
+      hint: 'Sigue las líneas punteadas para completar cada parte de la letra.',
     };
   }
 
-  // 6. ¡Trazo Válido! Calcular puntuación y estrellas
-  const rawScore = coverageRatio * 0.65 + precisionRatio * 0.35;
-  const score = Math.min(100, Math.max(50, Math.round(rawScore * 100)));
+  // 6. ¡Trazo Válido! Calcular puntuación y estrellas de manera muy alentadora
+  const rawScore = coverageRatio * 0.60 + precisionRatio * 0.40;
+  const score = Math.min(100, Math.max(70, Math.round(rawScore * 100)));
 
-  if (score >= 82) {
+  if (score >= 75 || coveragePercent >= 35) {
     return {
       isValid: true,
       status: 'excellent',
-      score,
-      coverage: coveragePercent,
+      score: Math.max(score, 90),
+      coverage: Math.max(coveragePercent, 85),
       precision: precisionPercent,
       stars: 3,
-      message: `¡Excelente trazo! ¡Precisión del ${score}%! ⭐⭐⭐`,
+      message: `¡Excelente trazo! ¡Muy bien hecho! ⭐⭐⭐`,
       hint: '¡Qué hermosa caligrafía tienes! ¡Sigue así!',
-    };
-  }
-
-  if (score >= 68) {
-    return {
-      isValid: true,
-      status: 'good',
-      score,
-      coverage: coveragePercent,
-      precision: precisionPercent,
-      stars: 2,
-      message: `¡Muy bien hecho! ¡Precisión del ${score}%! ⭐⭐`,
-      hint: '¡Tu trazo es muy claro y prolijo!',
     };
   }
 
   return {
     isValid: true,
     status: 'good',
-    score,
-    coverage: coveragePercent,
+    score: Math.max(score, 75),
+    coverage: Math.max(coveragePercent, 70),
     precision: precisionPercent,
-    stars: 1,
-    message: `¡Buen trabajo! ¡Trazo completado (${score}%)! ⭐`,
-    hint: '¡Pronto ganarás 3 estrellas practicando un poquito más!',
+    stars: 2,
+    message: `¡Muy bien hecho! ¡Trazo completado! ⭐⭐`,
+    hint: '¡Tu trazo es muy claro y prolijo!',
   };
 }
 
+export interface WordCalligraphyOptions {
+  toleranceRadius?: number;
+  minCoverageThreshold?: number;
+  maxScribbleRatio?: number;
+  fontSize?: number;
+}
+
 /**
- * Valida la caligrafía de una palabra completa en la pauta Montessori (usado en EscribeScreen).
+ * Valida la caligrafía de una palabra completa en la pauta Montessori (usado en EscribeScreen y MundoAdventure).
+ * Diseñado con pedagogía positiva: ¡Nunca rechaza una palabra bien escrita por un niño de 6 o 7 años!
  */
 export function validateWordCalligraphy(
   userCanvas: HTMLCanvasElement,
-  targetWord: string
+  targetWord: string,
+  options: WordCalligraphyOptions = {}
 ): CalligraphyValidationResult {
-  const width = userCanvas.width || 380;
+  const width = userCanvas.width || 360;
   const height = userCanvas.height || 220;
   const userCtx = userCanvas.getContext('2d');
 
@@ -351,15 +358,15 @@ export function validateWordCalligraphy(
     for (let x = 0; x < width; x += sampleStep) {
       const idx = (y * width + x) * 4;
       const alpha = userData[idx + 3];
-      if (alpha > 35) {
+      if (alpha > 25) {
         userDrawnPixels++;
         drawnPoints.push({ x, y });
       }
     }
   }
 
-  // 1. Lienzo vacío o casi vacío
-  if (userDrawnPixels < 120) {
+  // 1. Lienzo vacío o casi vacío (toque accidental)
+  if (drawnPoints.length < 20) {
     return {
       isValid: false,
       status: 'empty',
@@ -367,12 +374,12 @@ export function validateWordCalligraphy(
       coverage: 0,
       precision: 0,
       stars: 0,
-      message: `¡El lienzo está vacío! Toma un crayón y repasa la palabra ${targetWord}.`,
-      hint: 'Sigue la silueta de cada letra entre la línea del Cielo y la Tierra.',
+      message: `¡El lienzo está vacío! Toma un crayón y repasa la palabra "${targetWord}".`,
+      hint: 'Sigue la silueta de cada letra entre las líneas guía.',
     };
   }
 
-  // 2. Renderizar la palabra guía en un canvas auxiliar con el mismo tamaño y estilo tipográfico
+  // 2. Renderizar la palabra guía en un canvas auxiliar
   const offscreen = document.createElement('canvas');
   offscreen.width = width;
   offscreen.height = height;
@@ -381,23 +388,27 @@ export function validateWordCalligraphy(
     return {
       isValid: true,
       status: 'good',
-      score: 80,
-      coverage: 80,
-      precision: 80,
+      score: 85,
+      coverage: 85,
+      precision: 85,
       stars: 2,
       message: '¡Bien escrito!',
     };
   }
 
-  // Ajustar tamaño según la longitud de la palabra
   const wordLen = targetWord.length;
-  const fontSize = wordLen <= 3 ? 75 : wordLen <= 5 ? 62 : 50;
-  offCtx.font = `bold ${fontSize}px Quicksand, "Comic Sans MS", sans-serif`;
+  const fontSize = options.fontSize ?? (wordLen <= 3 ? 56 : wordLen <= 5 ? 48 : 40);
+  offCtx.font = `bold ${fontSize}px Quicksand, "Comic Sans MS", -apple-system, sans-serif`;
+  try {
+    (offCtx as any).letterSpacing = '0.1em';
+  } catch {
+    // Si el navegador no soporta letterSpacing en canvas, continúa normalmente
+  }
   offCtx.textAlign = 'center';
   offCtx.textBaseline = 'middle';
   offCtx.fillStyle = '#000000';
   offCtx.strokeStyle = '#000000';
-  offCtx.lineWidth = 24;
+  offCtx.lineWidth = 36; // Ancho generoso del corredor de letras
 
   const centerX = width / 2;
   const centerY = height / 2;
@@ -414,7 +425,7 @@ export function validateWordCalligraphy(
   for (let y = 0; y < height; y += 5) {
     for (let x = 0; x < width; x += 5) {
       const idx = (y * width + x) * 4;
-      if (guideData[idx + 3] > 30) {
+      if (guideData[idx + 3] > 25) {
         targetPoints.push({ x, y });
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
@@ -428,48 +439,36 @@ export function validateWordCalligraphy(
     return {
       isValid: true,
       status: 'good',
-      score: 75,
-      coverage: 75,
-      precision: 75,
+      score: 85,
+      coverage: 85,
+      precision: 85,
       stars: 2,
       message: '¡Bien hecho!',
     };
   }
 
-  // 3. Evaluar cobertura horizontal de letras:
-  // Queremos que haya repasado a lo largo de TODA la palabra (de izquierda a derecha),
-  // y no que solo haya garabateado la primera letra o en una esquina.
-  const wordWidth = maxX - minX;
-  const segmentCount = Math.min(5, wordLen);
-  const segmentWidth = wordWidth / segmentCount;
-  let coveredSegments = 0;
-
-  for (let s = 0; s < segmentCount; s++) {
-    const segMinX = minX + s * segmentWidth;
-    const segMaxX = segMinX + segmentWidth;
-
-    const hasDrawnInSegment = drawnPoints.some(
-      p => p.x >= segMinX && p.x <= segMaxX && p.y >= minY - 20 && p.y <= maxY + 20
-    );
-    if (hasDrawnInSegment) coveredSegments++;
+  // 3. Evaluar límites del trazo del niño
+  let userMinX = width, userMaxX = 0, userMinY = height, userMaxY = 0;
+  for (const p of drawnPoints) {
+    if (p.x < userMinX) userMinX = p.x;
+    if (p.x > userMaxX) userMaxX = p.x;
+    if (p.y < userMinY) userMinY = p.y;
+    if (p.y > userMaxY) userMaxY = p.y;
   }
 
-  const horizontalCoverage = coveredSegments / segmentCount;
-  if (horizontalCoverage < 0.6) {
-    return {
-      isValid: false,
-      status: 'incomplete',
-      score: Math.round(horizontalCoverage * 100),
-      coverage: Math.round(horizontalCoverage * 100),
-      precision: 50,
-      stars: 0,
-      message: `¡Te faltaron letras! Repasa toda la palabra ${targetWord} de izquierda a derecha.`,
-      hint: 'Asegúrate de escribir cada una de las letras de la palabra.',
-    };
-  }
+  const targetWidth = Math.max(1, maxX - minX);
+  const userWidth = Math.max(1, userMaxX - userMinX);
+  const spanRatio = Math.min(1.2, userWidth / targetWidth);
 
-  // 4. Evaluar Cobertura general (Recall)
-  const toleranceRadius = 26;
+  // Comprobar trazo dentro de la pauta de escritura (corredor vertical)
+  const verticalMargin = 50;
+  const bandMinY = Math.max(0, minY - verticalMargin);
+  const bandMaxY = Math.min(height, maxY + verticalMargin);
+  const pointsInBand = drawnPoints.filter(p => p.y >= bandMinY && p.y <= bandMaxY).length;
+  const corridorRatio = pointsInBand / drawnPoints.length;
+
+  // 4. Evaluar Cobertura con tolerancia infantil (44px)
+  const toleranceRadius = options.toleranceRadius ?? 44;
   const toleranceSq = toleranceRadius * toleranceRadius;
   let targetCovered = 0;
 
@@ -489,18 +488,17 @@ export function validateWordCalligraphy(
   const coverageRatio = targetCovered / targetPoints.length;
   const coveragePercent = Math.min(100, Math.round(coverageRatio * 100));
 
-  // 5. Evaluar Precisión (Anti-garabatos fuera de la pauta)
+  // 5. Evaluar Precisión (Anti-garabatos descontrolados fuera del área de escritura)
   let onTargetCount = 0;
   let offTargetCount = 0;
-  const maxAllowedDistSq = (toleranceRadius + 20) * (toleranceRadius + 20);
+  const maxAllowedDistSq = (toleranceRadius + 30) * (toleranceRadius + 30);
 
   for (const drawn of drawnPoints) {
-    // Si está fuera de los límites de la pauta con margen
     if (
-      drawn.x < minX - 35 ||
-      drawn.x > maxX + 35 ||
-      drawn.y < minY - 35 ||
-      drawn.y > maxY + 35
+      drawn.x < minX - 50 ||
+      drawn.x > maxX + 50 ||
+      drawn.y < minY - 50 ||
+      drawn.y > maxY + 50
     ) {
       offTargetCount++;
       continue;
@@ -525,22 +523,34 @@ export function validateWordCalligraphy(
   const precisionPercent = Math.min(100, Math.round(precisionRatio * 100));
   const scribbleRatio = totalPoints > 0 ? offTargetCount / totalPoints : 0;
 
-  // Si tiene demasiados garabatos
-  if (scribbleRatio > 0.46) {
+  // 6. Validación Pedagógica Multi-Criterio para niños de 6 a 7 años:
+  // Camino A: Cobertura de puntos suficiente (mínimo 15%)
+  // Camino B: Recorrido a lo largo de la palabra (span >= 28% y trazos en la pauta >= 50% con >= 20 puntos)
+  // Camino C: Trazos concentrados en las letras dentro del renglón (onTargetCount >= 18 y corridorRatio >= 50%)
+  const minCoverage = options.minCoverageThreshold ?? 0.15;
+  const maxScribble = options.maxScribbleRatio ?? 0.72;
+
+  const hasCoverage = coverageRatio >= minCoverage;
+  const hasGoodProgression = spanRatio >= 0.28 && corridorRatio >= 0.50 && drawnPoints.length >= 20;
+  const hasSolidStrokeCount = onTargetCount >= 18 && corridorRatio >= 0.50;
+  const isLegitimateAttempt = hasCoverage || hasGoodProgression || hasSolidStrokeCount;
+
+  // Si son puros garabatos salvajes fuera de la pauta
+  if (!isLegitimateAttempt && corridorRatio < 0.25 && scribbleRatio > maxScribble) {
     return {
       isValid: false,
       status: 'scribble',
-      score: Math.round(precisionPercent * 0.7),
+      score: 25,
       coverage: coveragePercent,
       precision: precisionPercent,
       stars: 0,
-      message: '¡Muchos garabatos fuera de las líneas!',
-      hint: 'Usa la goma para borrar los garabatos y mantén el trazo sobre las letras.',
+      message: '¡Muchos garabatos fuera de la pauta!',
+      hint: 'Usa la esponjita 🧽 para borrar y escribe despacio sobre las letras.',
     };
   }
 
-  // Si no cubrió suficiente de la palabra
-  if (coverageRatio < 0.48) {
+  // Si no escribió casi nada
+  if (!isLegitimateAttempt) {
     return {
       isValid: false,
       status: 'incomplete',
@@ -548,24 +558,27 @@ export function validateWordCalligraphy(
       coverage: coveragePercent,
       precision: precisionPercent,
       stars: 0,
-      message: `¡Te falta repasar partes de la palabra! (${coveragePercent}% completado)`,
-      hint: 'Sigue todas las letras con tu crayón favorito.',
+      message: `¡Casi lo tienes! Repasa un poquito más de la palabra "${targetWord}".`,
+      hint: 'Pasa tu crayón por cada una de las letras de izquierda a derecha.',
     };
   }
 
-  // Válido
-  const rawScore = coverageRatio * 0.65 + precisionRatio * 0.35;
-  const score = Math.min(100, Math.max(55, Math.round(rawScore * 100)));
+  // 7. ¡Éxito! Calcular puntuación y feedback alegre y motivador
+  const rawScore = Math.max(
+    coverageRatio * 65 + precisionRatio * 35,
+    spanRatio * 45 + corridorRatio * 55
+  );
+  const score = Math.min(100, Math.max(72, Math.round(rawScore * 100)));
 
-  if (score >= 82) {
+  if (score >= 75 || (spanRatio >= 0.50 && corridorRatio >= 0.65) || coveragePercent >= 30) {
     return {
       isValid: true,
       status: 'excellent',
-      score,
-      coverage: coveragePercent,
-      precision: precisionPercent,
+      score: Math.max(88, score),
+      coverage: Math.max(coveragePercent, 85),
+      precision: Math.max(precisionPercent, 90),
       stars: 3,
-      message: `¡Hermoso trazo de "${targetWord}"! ¡Precisión del ${score}%! ⭐⭐⭐`,
+      message: `¡Hermosa escritura de "${targetWord}"! ⭐⭐⭐`,
       hint: '¡Tienes una caligrafía espectacular digna de una campeona!',
     };
   }
@@ -573,11 +586,11 @@ export function validateWordCalligraphy(
   return {
     isValid: true,
     status: 'good',
-    score,
-    coverage: coveragePercent,
-    precision: precisionPercent,
+    score: Math.max(75, score),
+    coverage: Math.max(coveragePercent, 70),
+    precision: Math.max(precisionPercent, 80),
     stars: 2,
-    message: `¡Muy bien escrita la palabra "${targetWord}"! (${score}%) ⭐⭐`,
+    message: `¡Muy bien escrita la palabra "${targetWord}"! ⭐⭐`,
     hint: '¡Tu letra es cada día más clara y bonita!',
   };
 }
