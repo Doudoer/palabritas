@@ -42,6 +42,7 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
   const [isErasingAnimation, setIsErasingAnimation] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [validationResult, setValidationResult] = useState<CalligraphyValidationResult | null>(null);
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     if (initialFilter) {
@@ -68,6 +69,7 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
   };
 
   const handleClearCanvas = () => {
+    setAutoAdvanceCountdown(null);
     setIsErasingAnimation(true);
     playPop(350);
     triggerHaptic(15);
@@ -201,6 +203,9 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
       origin: { y: 0.6 },
       colors: ['#f59e0b', '#6cf8bb', '#42bbff', '#f87171'],
     });
+
+    // Iniciar cuenta regresiva para pasar automáticamente a la siguiente letra
+    setAutoAdvanceCountdown(3);
   };
 
   // Filter letters based on active tab
@@ -212,6 +217,7 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
   });
 
   const handleFilterClick = (filter: 'todas' | 'vocales' | 'primeras' | 'avanzadas') => {
+    setAutoAdvanceCountdown(null);
     playPop(420);
     triggerHaptic(15);
     setActiveFilter(filter);
@@ -237,6 +243,7 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
   };
 
   const handleSelectLetter = (index: number) => {
+    setAutoAdvanceCountdown(null);
     playPop(480);
     triggerHaptic(15);
     setSelectedLetterIndex(index);
@@ -245,6 +252,7 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
   };
 
   const handleNextLetter = () => {
+    setAutoAdvanceCountdown(null);
     playPop(480);
     triggerHaptic(15);
     const currentPosInFiltered = filteredAlphabet.findIndex(m => m.originalIndex === selectedLetterIndex);
@@ -257,6 +265,7 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
   };
 
   const handlePrevLetter = () => {
+    setAutoAdvanceCountdown(null);
     playPop(480);
     triggerHaptic(15);
     const currentPosInFiltered = filteredAlphabet.findIndex(m => m.originalIndex === selectedLetterIndex);
@@ -267,6 +276,20 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
       handleSelectLetter(filteredAlphabet[0].originalIndex);
     }
   };
+
+  // Temporizador de avance automático al siguiente reto
+  useEffect(() => {
+    if (autoAdvanceCountdown === null) return;
+    if (autoAdvanceCountdown <= 0) {
+      setAutoAdvanceCountdown(null);
+      handleNextLetter();
+      return;
+    }
+    const timer = setTimeout(() => {
+      setAutoAdvanceCountdown(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [autoAdvanceCountdown, selectedLetterIndex]);
 
   return (
     <div className="flex flex-col w-full pb-6 space-y-3.5 select-none">
@@ -643,11 +666,14 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
               </div>
             </div>
             <button
-              onClick={handleNextLetter}
-              className="px-4 py-2.5 bg-[#16a34a] hover:bg-[#15803d] text-white rounded-2xl font-black text-xs shadow-[0_3px_0_0_#14532d] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+              onClick={() => {
+                setAutoAdvanceCountdown(null);
+                handleNextLetter();
+              }}
+              className="px-4 py-2.5 bg-[#16a34a] hover:bg-[#15803d] text-white rounded-2xl font-black text-xs shadow-[0_3px_0_0_#14532d] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1.5 shrink-0 animate-pulse"
               type="button"
             >
-              <span>Siguiente</span>
+              <span>{autoAdvanceCountdown !== null ? `Siguiente (${autoAdvanceCountdown}s)` : 'Siguiente'}</span>
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
             </button>
           </div>
@@ -702,20 +728,27 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
 
         {/* Big Giant Check CTA Button with Calibration / Real Validation */}
         <button
-          onClick={handleCheckTrace}
+          onClick={() => {
+            if (isCompleted) {
+              setAutoAdvanceCountdown(null);
+              handleNextLetter();
+            } else {
+              handleCheckTrace();
+            }
+          }}
           className={`w-full h-16 rounded-2xl flex items-center justify-center gap-3 transition-all cursor-pointer border-2 ${
             isCompleted
-              ? 'bg-[#16a34a] hover:bg-[#15803d] text-white shadow-[0_6px_0_0_#14532d] border-[#14532d]'
+              ? 'bg-[#16a34a] hover:bg-[#15803d] text-white shadow-[0_6px_0_0_#14532d] border-[#14532d] animate-bounce'
               : 'bg-[#006c49] hover:bg-[#00714d] text-white shadow-[0_6px_0_0_#005236] border-[#005236] active:translate-y-1.5 active:shadow-[0_2px_0_0_#005236]'
           }`}
           type="button"
         >
           <span className="material-symbols-outlined text-[32px] font-bold">
-            {isCompleted ? 'verified' : 'fact_check'}
+            {isCompleted ? 'arrow_circle_right' : 'fact_check'}
           </span>
           <span className="text-xl font-bold tracking-wide">
             {isCompleted
-              ? `¡Letra ${currentExercise.letter} Aprobada! ⭐`
+              ? `¡Siguiente Letra! (${autoAdvanceCountdown !== null ? `${autoAdvanceCountdown}s` : 'Ya'}) ➔`
               : `Validar Caligrafía de la Letra ${currentExercise.letter}`}
           </span>
         </button>

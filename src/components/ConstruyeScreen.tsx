@@ -102,8 +102,9 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
   const [activeMode, setActiveMode] = useState<ExerciseTypeKey>(() => getCurrentDayTheme().key);
   const [targetFilled, setTargetFilled] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
-  const [shakingCard, setShakingCard] = useState<string | null>(null);
   const [unlockedNextWorldTitle, setUnlockedNextWorldTitle] = useState<string | null>(null);
+  const [autoCountdown, setAutoCountdown] = useState<number | null>(null);
+  const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Daily tracker state
   const [dailyProgress, setDailyProgress] = useState(() => loadDailyProgress());
@@ -224,8 +225,24 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
     onAddStars(10);
     setTimeout(() => {
       setShowVictoryModal(true);
+      setAutoCountdown(3);
     }, 600);
   };
+
+  // Auto-advance countdown effect
+  useEffect(() => {
+    if (autoCountdown === null) return;
+    if (autoCountdown > 0) {
+      autoTimerRef.current = setTimeout(() => {
+        setAutoCountdown(prev => (prev !== null ? prev - 1 : null));
+      }, 1000);
+    } else if (autoCountdown === 0) {
+      handleNextWord();
+    }
+    return () => {
+      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+    };
+  }, [autoCountdown]);
 
   // MODE 1: Construye la palabra
   const handleSelectSyllable = (syllable: string) => {
@@ -361,16 +378,24 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
   };
 
   const handleNextWord = () => {
+    if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+    setAutoCountdown(null);
     playPop(480);
     triggerHaptic(20);
     setShowVictoryModal(false);
     setTargetFilled(false);
+    setMatchedWordSelected(null);
+    setPoppedBubbles([]);
+    setOrderedPieces([]);
 
     if (currentPosInFiltered < filteredExercises.length - 1) {
       const nextItem = filteredExercises[currentPosInFiltered + 1];
       setExerciseIndex(nextItem.originalIndex);
-      speakSpanish(`Siguiente: ${nextItem.exampleWord}`);
+      speakSpanish(`Siguiente reto: ${nextItem.exampleWord}`);
     } else {
+      if (onCompleteWorld) {
+        onCompleteWorld(currentWorld.id);
+      }
       onOpenCelebration();
     }
   };
@@ -991,17 +1016,26 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
             )}
 
             <div className="w-full flex flex-col gap-2">
+              {autoCountdown !== null && (
+                <div className="w-full flex items-center justify-between text-xs font-bold text-[#855300] bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
+                  <span>Pasando al siguiente reto en:</span>
+                  <span className="font-black text-amber-700 text-sm animate-pulse">{autoCountdown}s ➔</span>
+                </div>
+              )}
+
               <button
                 onClick={handleNextWord}
                 type="button"
-                className="w-full py-3 bg-[#f59e0b] hover:bg-[#d97706] text-[#613b00] font-black text-sm rounded-2xl shadow-[0_4px_0_0_#b45309] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full py-3.5 bg-gradient-to-r from-[#f59e0b] to-[#fbbf24] hover:brightness-105 text-[#451a03] font-black text-sm rounded-2xl shadow-[0_4px_0_0_#b45309] active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>Siguiente Palabra</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                <span>¡Siguiente Reto Ya!</span>
+                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
               </button>
 
               <button
                 onClick={() => {
+                  if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+                  setAutoCountdown(null);
                   setShowVictoryModal(false);
                   onBackToMap();
                 }}

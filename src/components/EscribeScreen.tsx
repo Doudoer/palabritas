@@ -72,6 +72,7 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
   const [dictadoTyped, setDictadoTyped] = useState<string[]>([]);
   const [dictadoRevealed, setDictadoRevealed] = useState<boolean>(false);
   const [dictadoSuccess, setDictadoSuccess] = useState<boolean>(false);
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState<number | null>(null);
 
   // Saved learned words in localStorage
   const [learnedWords, setLearnedWords] = useState<string[]>(() => {
@@ -98,8 +99,27 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
     });
   };
 
+  // Pasar a la siguiente palabra o letra del abecedario
+  const handleNextWord = () => {
+    setAutoAdvanceCountdown(null);
+    playPop(520);
+    triggerHaptic(20);
+    if (selectedWordIndex + 1 < words.length) {
+      setSelectedWordIndex(prev => prev + 1);
+    } else {
+      // Avanzar a la siguiente letra del abecedario
+      const currentLetterIndex = ALPHABET_KEYS.indexOf(selectedLetter);
+      const nextLetterIndex = (currentLetterIndex + 1) % ALPHABET_KEYS.length;
+      const nextLetter = ALPHABET_KEYS[nextLetterIndex];
+      setSelectedLetter(nextLetter);
+      setSelectedWordIndex(0);
+      speakSpanish(`¡Excelente! Ahora practicamos palabras con la letra ${nextLetter}!`);
+    }
+  };
+
   // Reset inputs when letter or word changes
   useEffect(() => {
+    setAutoAdvanceCountdown(null);
     setTypedLetters([]);
     setDictadoTyped([]);
     setIsWordCompleted(false);
@@ -110,6 +130,20 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
     setCanvasCompleted(false);
     setCaligrafiaFeedback(null);
   }, [selectedLetter, selectedWordIndex]);
+
+  // Temporizador de auto-avance al siguiente reto
+  useEffect(() => {
+    if (autoAdvanceCountdown === null) return;
+    if (autoAdvanceCountdown <= 0) {
+      setAutoAdvanceCountdown(null);
+      handleNextWord();
+      return;
+    }
+    const timer = setTimeout(() => {
+      setAutoAdvanceCountdown(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [autoAdvanceCountdown, selectedWordIndex, selectedLetter]);
 
   // Pronounce word on load
   const handlePlayWordAudio = () => {
@@ -240,6 +274,7 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
         setTimeout(() => {
           speakSpanish(`¡Excelente! ¡Escribiste ${currentWord.displayWord}! ¡Eres una gran escritora!`);
         }, 300);
+        setAutoAdvanceCountdown(3);
       }
     } else {
       // Wrong letter
@@ -290,6 +325,7 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
       colors: ['#6cf8bb', '#38bdf8', '#f59e0b'],
     });
     speakSpanish(result.message);
+    setAutoAdvanceCountdown(3);
   };
 
   // Mode 3: Dictado input
@@ -320,6 +356,7 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
         setTimeout(() => {
           speakSpanish(`¡Genial! ¡Superaste el dictado de la palabra ${currentWord.displayWord}!`);
         }, 300);
+        setAutoAdvanceCountdown(3);
       }
     } else {
       playWiggleError();
@@ -548,6 +585,33 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
             <p className="text-xs text-[#855300] font-bold mt-0.5">{currentWord.meaning}</p>
           </div>
         </div>
+
+        {/* Banner de Victoria & Auto-Avance al Siguiente Reto */}
+        {(isWordCompleted || (canvasCompleted && caligrafiaFeedback?.isValid) || dictadoSuccess) && (
+          <div className="w-full max-w-md bg-gradient-to-r from-[#dcfce7] to-[#bbf7d0] border-2 border-[#86efac] rounded-2xl p-3 my-2 shadow-[0_4px_0_0_#86efac] flex items-center justify-between gap-2 animate-bounce">
+            <div className="flex items-center gap-2 text-left">
+              <span className="text-2xl">🎉</span>
+              <div>
+                <h4 className="text-xs font-black text-[#166534]">
+                  ¡Palabra &quot;{currentWord.displayWord}&quot; Superada! ⭐
+                </h4>
+                <p className="text-[11px] text-[#15803d] font-bold">
+                  {autoAdvanceCountdown !== null
+                    ? `Siguiente reto en ${autoAdvanceCountdown}s...`
+                    : '¡Lista para la siguiente aventura!'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleNextWord}
+              type="button"
+              className="px-3.5 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white rounded-xl font-black text-xs shadow-[0_3px_0_0_#14532d] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1 shrink-0"
+            >
+              <span>¡Siguiente Reto!</span>
+              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          </div>
+        )}
 
         {/* MODE 1: LETRA POR LETRA (TECLADO MÁGICO) */}
         {activeMode === 'teclado' && (
@@ -788,7 +852,7 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
             )}
 
             {caligrafiaFeedback && caligrafiaFeedback.isValid && canvasCompleted && (
-              <div className="w-full max-w-md bg-[#f0fdf4] border-2 border-[#86efac] rounded-2xl p-3 mt-3 shadow-xs">
+              <div className="w-full max-w-md bg-[#f0fdf4] border-2 border-[#86efac] rounded-2xl p-3 mt-3 shadow-xs flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
                   <span className="text-2xl">🌟</span>
                   <div className="flex-1 text-left">
@@ -803,6 +867,14 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
                     </p>
                   </div>
                 </div>
+                <button
+                  onClick={handleNextWord}
+                  type="button"
+                  className="px-3.5 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white rounded-xl font-black text-xs shadow-[0_3px_0_0_#14532d] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1 shrink-0 animate-pulse"
+                >
+                  <span>{autoAdvanceCountdown !== null ? `Siguiente (${autoAdvanceCountdown}s)` : 'Siguiente'}</span>
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </button>
               </div>
             )}
           </div>
