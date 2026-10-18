@@ -8,7 +8,7 @@
 ---
 
 ## 📌 Checkpoint Actual: `v0.1.9 - Rediseño Integral de Recompensas y Premios (Álbum Dinámico de Mundos, Rasca y Descubre, Cofre Sorpresa, Medallas y Tienda de Disfraces)`
-- **Hash de Commit:** Pendiente de commit
+- **Hash de Commit:** `77abf0a` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ Producción Estable. Se modernizó y transformó completamente la pestaña de **Premios y Recompensas**:
   1. **Mi Álbum Mágico:** Conectado dinámicamente con los 29 mundos del abecedario en `WORLDS_DATA` y stickers especiales. Cada mundo completado desbloquea su sticker exclusivo con su emoji, fonema y palabra ancla. Al tocar cualquier sticker desbloqueado, se reproduce animación 3D, confeti, sonido de arpegio y pronunciación fonética clara en español.
   2. **Minijuego "Rasca y Descubre":** Lienzo interactivo holográfico que inicia al 0% y permite raspar con el dedo o ratón, con cálculo en tiempo real del porcentaje, sonidos de raspado, háptica y botón para reclamar el sticker descubierto y ganar +50 estrellas.
