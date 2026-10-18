@@ -1,7 +1,9 @@
 /**
  * Audio and Haptic Synthesis Utility for Palabritas
- * Uses Web Speech API for authentic Spanish pronunciation and
- * Web Audio API for responsive tactile sounds.
+ * Multi-tiered hybrid engine:
+ * 1. Native High-Definition Audio Stream (HTMLAudioElement) for guaranteed cross-platform Spanish voice.
+ * 2. Web Speech API (SpeechSynthesis) offline fallback with queue recovery.
+ * 3. Web Audio API (AudioContext) for responsive tactile pops, chimes, and fanfares.
  */
 
 // Procedural audio context singleton
@@ -16,6 +18,10 @@ let cachedVoices: SpeechSynthesisVoice[] = [];
 let audioUnlocked = false;
 let pendingSpeechTimeout: ReturnType<typeof setTimeout> | null = null;
 let speechWatchdogInterval: ReturnType<typeof setInterval> | null = null;
+
+// Reusable audio element singleton for voice streams
+let voiceAudioElement: HTMLAudioElement | null = null;
+let activeVoiceAudioTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Keep global reference to active utterance to prevent V8 GC premature collection (Chromium bug 289725)
 interface WindowWithUtterance extends Window {
@@ -38,7 +44,7 @@ function loadVoices() {
 }
 
 /**
- * Chooses the best Spanish voice based on locale and child-friendliness
+ * Chooses the best Spanish voice based on locale
  */
 function getBestSpanishVoice(accent: 'latino' | 'castellano'): SpeechSynthesisVoice | null {
   if (cachedVoices.length === 0) {
@@ -67,7 +73,7 @@ function getBestSpanishVoice(accent: 'latino' | 'castellano'): SpeechSynthesisVo
 }
 
 /**
- * Initializes and unlocks AudioContext and SpeechSynthesis on user interaction
+ * Initializes and unlocks AudioContext, HTML5 Audio, and SpeechSynthesis on user interaction
  */
 export function unlockAudio() {
   if (typeof window === 'undefined') return;
@@ -97,7 +103,17 @@ export function unlockAudio() {
     // Ignore failure
   }
 
-  // 2. Unlock & resume SpeechSynthesis if stuck or paused
+  // 2. Unlock HTMLAudioElement for mobile media policy
+  try {
+    if (!voiceAudioElement) {
+      voiceAudioElement = new Audio();
+      voiceAudioElement.preload = 'auto';
+    }
+  } catch {
+    // Ignore failure
+  }
+
+  // 3. Unlock & resume SpeechSynthesis if stuck or paused
   try {
     if ('speechSynthesis' in window) {
       loadVoices();
@@ -121,7 +137,7 @@ if (typeof window !== 'undefined') {
     };
   }
 
-  const unlockEvents = ['pointerdown', 'touchstart', 'mousedown', 'keydown'];
+  const unlockEvents = ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'];
   const handleFirstInteraction = () => {
     unlockAudio();
     unlockEvents.forEach(evt => window.removeEventListener(evt, handleFirstInteraction));
@@ -174,10 +190,95 @@ export function setVoicePreferences(accent: 'latino' | 'castellano', speed: 'len
 }
 
 /**
- * Pronounce Spanish text using SpeechSynthesis with Chrome queue-recovery
+ * Fallback synthesizer using Web Speech API with Chromium queue recovery
+ */
+function speakWithSpeechSynthesis(text: string, onEnd?: () => void) {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    if (onEnd) onEnd();
+    return;
+  }
+
+  try {
+    // Unstick engine if paused
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    (window as WindowWithUtterance).__palabritasUtterance = utterance;
+
+    utterance.lang = voiceAccent === 'castellano' ? 'es-ES' : 'es-MX';
+    utterance.rate = speechSpeed === 'lenta' ? 0.75 : 0.9;
+    utterance.pitch = 1.05; // Slightly warmer child-friendly pitch
+
+    const bestVoice = getBestSpanishVoice(voiceAccent);
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+    }
+
+    let finished = false;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+
+      if (fallbackTimer) {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+
+      if (speechWatchdogInterval) {
+        clearInterval(speechWatchdogInterval);
+        speechWatchdogInterval = null;
+      }
+
+      if ((window as WindowWithUtterance).__palabritasUtterance === utterance) {
+        (window as WindowWithUtterance).__palabritasUtterance = null;
+      }
+
+      if (onEnd) {
+        onEnd();
+      }
+    };
+
+    utterance.onend = finish;
+    utterance.onerror = (e) => {
+      if (e.error !== 'interrupted' && e.error !== 'canceled') {
+        console.warn('SpeechSynthesis event:', e.error);
+      }
+      finish();
+    };
+
+    // Watchdog for Chromium: Chrome pauses speech if utterance takes > 14 seconds
+    speechWatchdogInterval = setInterval(() => {
+      if (!window.speechSynthesis.speaking) {
+        if (speechWatchdogInterval) clearInterval(speechWatchdogInterval);
+        return;
+      }
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    }, 5000);
+
+    // Safety timeout: If browser drops onend, don't block user flow
+    const safeDurationMs = Math.max(2200, text.length * 130);
+    fallbackTimer = setTimeout(() => {
+      finish();
+    }, safeDurationMs);
+
+    window.speechSynthesis.speak(utterance);
+  } catch (err) {
+    console.warn('SpeechSynthesis fallback error:', err);
+    if (onEnd) onEnd();
+  }
+}
+
+/**
+ * Pronounce Spanish text using High-Definition Audio Stream with automatic SpeechSynthesis fallback
  */
 export function speakSpanish(text: string, onEnd?: () => void) {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+  if (typeof window === 'undefined') {
     if (onEnd) onEnd();
     return;
   }
@@ -185,108 +286,118 @@ export function speakSpanish(text: string, onEnd?: () => void) {
   // Ensure audio is unlocked
   unlockAudio();
 
-  // Clear any existing pending speech timeout
+  const cleanText = text.trim();
+  if (!cleanText) {
+    if (onEnd) onEnd();
+    return;
+  }
+
+  // Clear any existing pending timeouts
   if (pendingSpeechTimeout) {
     clearTimeout(pendingSpeechTimeout);
     pendingSpeechTimeout = null;
   }
-
-  // Clean existing speech watchdog
-  if (speechWatchdogInterval) {
-    clearInterval(speechWatchdogInterval);
-    speechWatchdogInterval = null;
+  if (activeVoiceAudioTimeout) {
+    clearTimeout(activeVoiceAudioTimeout);
+    activeVoiceAudioTimeout = null;
   }
 
-  const performSpeak = () => {
-    try {
-      // Unstick engine if paused
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      (window as WindowWithUtterance).__palabritasUtterance = utterance;
-
-      utterance.lang = voiceAccent === 'castellano' ? 'es-ES' : 'es-MX';
-      utterance.rate = speechSpeed === 'lenta' ? 0.75 : 0.9;
-      utterance.pitch = 1.05; // Slightly warmer child-friendly pitch
-
-      const bestVoice = getBestSpanishVoice(voiceAccent);
-      if (bestVoice) {
-        utterance.voice = bestVoice;
-      }
-
-      let finished = false;
-      let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
-
-      const finish = () => {
-        if (finished) return;
-        finished = true;
-
-        if (fallbackTimer) {
-          clearTimeout(fallbackTimer);
-          fallbackTimer = null;
-        }
-
-        if (speechWatchdogInterval) {
-          clearInterval(speechWatchdogInterval);
-          speechWatchdogInterval = null;
-        }
-
-        if ((window as WindowWithUtterance).__palabritasUtterance === utterance) {
-          (window as WindowWithUtterance).__palabritasUtterance = null;
-        }
-
-        if (onEnd) {
-          onEnd();
-        }
-      };
-
-      utterance.onend = finish;
-      utterance.onerror = (e) => {
-        // e.error can be 'interrupted' or 'canceled' when a user rapidly clicks another sound
-        if (e.error !== 'interrupted' && e.error !== 'canceled') {
-          console.warn('SpeechSynthesis event:', e.error);
-        }
-        finish();
-      };
-
-      // Watchdog for Chromium: Chrome pauses speech if utterance takes > 14 seconds
-      speechWatchdogInterval = setInterval(() => {
-        if (!window.speechSynthesis.speaking) {
-          if (speechWatchdogInterval) clearInterval(speechWatchdogInterval);
-          return;
-        }
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-        }
-      }, 5000);
-
-      // Safety timeout: If browser drops onend (mobile WebViews or background tabs), don't block user flow
-      const safeDurationMs = Math.max(2200, text.length * 130);
-      fallbackTimer = setTimeout(() => {
-        finish();
-      }, safeDurationMs);
-
-      window.speechSynthesis.speak(utterance);
-    } catch (err) {
-      console.warn('Could not speak Spanish utterance:', err);
-      if (onEnd) onEnd();
+  let finished = false;
+  const safeFinish = () => {
+    if (finished) return;
+    finished = true;
+    if (activeVoiceAudioTimeout) {
+      clearTimeout(activeVoiceAudioTimeout);
+      activeVoiceAudioTimeout = null;
     }
+    if (onEnd) onEnd();
   };
 
-  // If the engine is already speaking, cancel cleanly and schedule speak on the next tick
-  // to avoid the Chromium cancel() race condition where speak() is dropped
-  if (window.speechSynthesis.speaking) {
+  // Build audio stream URLs (Primary: Nginx proxy, Secondary: Direct Google TTS)
+  const lang = voiceAccent === 'castellano' ? 'es-ES' : 'es';
+  const encoded = encodeURIComponent(cleanText);
+  const primaryUrl = `/api/tts?q=${encoded}&tl=${lang}`;
+  const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encoded}`;
+
+  // If text is manageable for audio streaming (<= 150 characters), use real audio stream
+  if (cleanText.length <= 150) {
     try {
-      window.speechSynthesis.cancel();
+      if (!voiceAudioElement) {
+        voiceAudioElement = new Audio();
+      }
+
+      // Stop any existing audio or speech synthesis
+      try {
+        voiceAudioElement.pause();
+        voiceAudioElement.currentTime = 0;
+      } catch {
+        // Ignore
+      }
+
+      if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch {
+          // Ignore
+        }
+      }
+
+      voiceAudioElement.playbackRate = speechSpeed === 'lenta' ? 0.85 : 1.0;
+
+      let directTried = false;
+
+      voiceAudioElement.onended = () => {
+        safeFinish();
+      };
+
+      voiceAudioElement.onerror = () => {
+        if (!directTried) {
+          directTried = true;
+          if (voiceAudioElement) {
+            voiceAudioElement.src = directUrl;
+            voiceAudioElement.play().catch(() => {
+              speakWithSpeechSynthesis(cleanText, safeFinish);
+            });
+          }
+        } else {
+          speakWithSpeechSynthesis(cleanText, safeFinish);
+        }
+      };
+
+      voiceAudioElement.src = primaryUrl;
+      const playPromise = voiceAudioElement.play();
+
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // If browser policy or connection failed, attempt direct URL then speech synthesis
+          if (!directTried) {
+            directTried = true;
+            if (voiceAudioElement) {
+              voiceAudioElement.src = directUrl;
+              voiceAudioElement.play().catch(() => {
+                speakWithSpeechSynthesis(cleanText, safeFinish);
+              });
+            }
+          } else {
+            speakWithSpeechSynthesis(cleanText, safeFinish);
+          }
+        });
+      }
+
+      // Safety timeout: bounded duration ensures UI flow never hangs
+      const maxAudioMs = Math.max(2500, cleanText.length * 120);
+      activeVoiceAudioTimeout = setTimeout(() => {
+        safeFinish();
+      }, maxAudioMs);
+
+      return;
     } catch {
-      // Ignore
+      // Fall through to speech synthesis fallback
     }
-    pendingSpeechTimeout = setTimeout(performSpeak, 40);
-  } else {
-    performSpeak();
   }
+
+  // Fallback to SpeechSynthesis for longer sentences
+  speakWithSpeechSynthesis(cleanText, safeFinish);
 }
 
 /**

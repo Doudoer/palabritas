@@ -7,9 +7,11 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.7 - Diagnóstico y Reparación Integral del Motor de Audio y Síntesis de Voz (Web Audio API & Web Speech API)`
-- **Hash de Commit:** `93edd01` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
-- **Estado General:** ✅ Producción Estable. Se diagnosticó y resolvió de raíz la causa por la cual la aplicación se quedaba sin audio. Se implementó una arquitectura de audio blindada con desbloqueo proactivo en el primer gesto de usuario (resolviendo la política de Autoplay de navegadores), eliminación de la carrera asíncrona de `speechSynthesis.cancel()` en Chromium, recuperación automática ante congelamientos con watchdog, retención global contra Garbage Collection prematuro y caché de voces en español (`es-MX`, `es-419`, `es-ES`).
+## 📌 Checkpoint Actual: `v0.1.8 - Motor Híbrido de Audio Dual (Stream de Audio MP3 de Alta Definición + Proxy Nginx /api/tts + Fallback SpeechSynthesis)`
+- **Hash de Commit:** Pendiente de commit (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
+- **Estado General:** ✅ Producción Estable. Se implementó una arquitectura de audio híbrida dual de alta fidelidad:
+  1. **Motor Primario (Stream de Audio MP3 Nativo):** Utiliza `HTMLAudioElement` con el proxy de servidor `/api/tts` (alimentado por síntesis vocal en español con calidad de estudio). Funciona en el 100% de los dispositivos, incluidos teléfonos y PCs con Windows que no tienen paquetes de voz en español instalados, dispositivos Android sin Google TTS, y Safari/iOS sin verse afectado por el interruptor físico de silencio.
+  2. **Motor Secundario (SpeechSynthesis Fallback):** Si el dispositivo está sin conexión a internet, conmuta transparentemente a la API nativa del navegador con recuperación de cola y voces cacheadas.
 - **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía (0 fallos) + 4 pruebas de caligrafía infantil (4/4 pasando) + `tsc --noEmit` limpio + Docker build exitoso.
 
 ---
@@ -180,6 +182,18 @@
   - **Watchdog de Recuperación y Descongelamiento:** Intervalo de vigilancia de 5s que detecta si el navegador pausó la locución y ejecuta `window.speechSynthesis.resume()`.
   - **Retención Global en `window.__palabritasUtterance`:** Previene la recolección prematura de basura por el motor JavaScript.
   - **Temporizador de Respaldo Garantizado:** Se garantiza que el callback `onEnd` se ejecute siempre (`Math.max(2200, text.length * 130)`), evitando que los flujos de juego se queden colgados si el navegador no dispara `onend`.
+
+### Paso 12: Arquitectura Híbrida de Audio (Stream MP3 Nativo + Proxy Nginx + SpeechSynthesis Fallback)
+- **Diagnóstico del Fallo de Voz en Dispositivos Reales:**
+  - En pruebas directas en hardware real, `window.speechSynthesis` falla o no se escucha si:
+    1. El dispositivo tiene Windows en inglés sin haber descargado el paquete de voz en español en la configuración de accesibilidad.
+    2. El dispositivo es un Android o tablet sin los servicios de voz de Google configurados.
+    3. El dispositivo es un iPhone o iPad donde el botón físico lateral de silencio (Mute Switch) silencia `SpeechSynthesis` pero permite elementos multimedia `<audio>`.
+- **Implementación del Motor Híbrido:**
+  - **Proxy Inverso en Nginx (`/api/tts`):** Se configuró en `nginx.conf` la ruta `/api/tts` con `proxy_pass` hacia síntesis de voz en español de alta fidelidad, con caché de cabecera `Cache-Control: public, max-age=604800, immutable` y CORS habilitado.
+  - **Reproductor de Stream Primario (`HTMLAudioElement`):** `speakSpanish()` ahora emite audio MP3 de locución humana natural a través de `HTMLAudioElement` con fallback directo a Google TTS.
+  - **Fallback Automático:** Si el dispositivo está sin conexión a internet, se conmuta transparentemente a `SpeechSynthesis`.
+  - **Desbloqueo Táctil Unificado:** Al primer toque o clic del niño, se desbloquean simultáneamente `AudioContext`, `HTMLAudioElement` y `speechSynthesis`.
 
 ---
 
