@@ -6,6 +6,12 @@
 
 Aplicación educativa infantil interactiva de lectoescritura, fonética en español, trazos táctiles y álbum de recompensas (React 19 + Vite + Tailwind CSS + PWA).
 
+[![CI/CD Palabritas](https://github.com/Doudoer/palabritas/actions/workflows/deploy.yml/badge.svg)](https://github.com/Doudoer/palabritas/actions)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
+
+- **Repositorio Oficial:** [https://github.com/Doudoer/palabritas](https://github.com/Doudoer/palabritas)
+- **Servidor VPS en Vivo:** [http://167.235.21.59](http://167.235.21.59) *(Auto-sincronizado con cada commit)*
+
 ---
 
 ## 🐳 Ejecución con Docker (Recomendado)
