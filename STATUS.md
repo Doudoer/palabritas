@@ -8,7 +8,7 @@
 ---
 
 ## 📌 Checkpoint Actual: `v0.1.6 - Arquitectura de Aventura por Mundos, 4 Estaciones Obligatorias y Navegación Simplificada para Niños de 6 y 7 Años`
-- **Hash de Commit:** Pendiente de push a `origin/main`
+- **Hash de Commit:** `5b85af6` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ Producción Estable. Reestructuración completa orientada a Mundos: Cada mundo cuenta con su aventura guiada lineal de 4 estaciones indispensables (1. Trazos de 4 letras en Mayúscula + 4 en Minúscula sin bucle infinito, 2. Escritura a mano en pauta Montessori, 3. Completación de sílabas con feedback fonético e instantáneo "¡Correcto!", 4. Lección de lectura decodificable). Desbloqueo estricto del mundo siguiente al completar las 4 estaciones. Se simplificó la barra de navegación inferior a 3 botones táctiles intuitivos para niños (Mundos, Cuentos, Premios).
 - **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía completadas (0 fallos) + `tsc --noEmit` limpio + Docker build exitoso.
 
