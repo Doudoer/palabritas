@@ -219,6 +219,9 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
   // Scratch movement interaction
   const handleScratchMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (scratchClaimed || !isScratching) return;
+    if ('touches' in e && e.cancelable) {
+      e.preventDefault();
+    }
     const canvas = scratchCanvasRef.current;
     if (!canvas) return;
 
@@ -937,6 +940,7 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
                     onMouseUp={() => setIsScratching(false)}
                     onMouseLeave={() => setIsScratching(false)}
                     onTouchStart={(e) => {
+                      if (e.cancelable) e.preventDefault();
                       setIsScratching(true);
                       handleScratchMove(e);
                     }}

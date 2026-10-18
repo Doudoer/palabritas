@@ -450,6 +450,10 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
           0%, 100% { opacity: 0.3; transform: scale(0.8); }
           50% { opacity: 1; transform: scale(1.2); }
         }
+        @keyframes modalPop {
+          0% { opacity: 0; transform: scale(0.92) translateY(14px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
         @keyframes pulseGlow {
           0%, 100% { opacity: 0.7; }
           50% { opacity: 1; filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.8)); }
@@ -514,7 +518,7 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
           THE 2.5D INTERACTIVE ROOM STAGE
          ======================================================== */}
       <div
-        className={`relative w-full aspect-[4/3.3] sm:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-4 border-[#ffddb8] transition-colors duration-700 ${
+        className={`relative w-full min-h-[460px] h-[460px] sm:h-[500px] rounded-3xl overflow-hidden shadow-2xl border-4 border-[#ffddb8] transition-colors duration-700 ${
           roomConfig.wallpaper === 'wall-pink'
             ? 'bg-gradient-to-b from-[#fce7f3] via-[#fed7aa] to-[#fbcfe8]'
             : roomConfig.wallpaper === 'wall-stars'
@@ -661,7 +665,7 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
           ref={floorRef}
           onClick={handleFloorClick}
           title="¡Toca cualquier lugar del suelo para mover a tu niña por el cuarto!"
-          className={`absolute bottom-0 inset-x-0 h-[38%] border-t-4 border-[#e2a875] z-10 cursor-pointer overflow-hidden ${
+          className={`absolute bottom-0 inset-x-0 h-[46%] border-t-4 border-[#e2a875] z-10 cursor-pointer overflow-hidden ${
             roomConfig.floor === 'floor-tiles'
               ? 'bg-[radial-gradient(#bae6fd_1px,transparent_1px)] [background-size:16px_16px] bg-sky-100'
               : roomConfig.floor === 'floor-cloud'
@@ -685,6 +689,7 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
               className="absolute pointer-events-none w-10 h-10 rounded-full border-2 border-amber-300 bg-amber-200/40 animate-ping z-30"
             />
           )}
+        </div>
 
           {/* ==================== BED SLOT (Left Area) ==================== */}
           <div
@@ -1335,7 +1340,6 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
               </div>
             )}
           </div>
-        </div>
       </div>
 
       {/* Action CTA: Big Shiny "Armario & Decoración" Button */}
@@ -1381,8 +1385,19 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
           THE CUSTOMIZATION DRAWER (ARMARIO MÁGICO)
          ======================================================== */}
       {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
-          <div className="w-full max-w-xl max-h-[85vh] sm:max-h-[88vh] bg-[#fff8f6] rounded-t-3xl sm:rounded-3xl border-4 border-[#ffddb8] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              playPop(350);
+              setIsDrawerOpen(false);
+            }
+          }}
+          className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 select-none"
+        >
+          <div
+            style={{ animation: 'modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+            className="w-full max-w-lg max-h-[88vh] bg-[#fff8f6] rounded-3xl border-4 border-[#ffddb8] shadow-2xl flex flex-col overflow-hidden relative"
+          >
             {/* Drawer Header */}
             <div className="p-3.5 bg-gradient-to-r from-pink-100 via-amber-100 to-pink-100 border-b border-[#ffd0bb] flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1403,31 +1418,16 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
                   playPop(350);
                   setIsDrawerOpen(false);
                 }}
-                className="w-8 h-8 rounded-full bg-white/90 text-[#351000] border border-[#ffd0bb] flex items-center justify-center font-black text-sm shadow-xs active:scale-90 cursor-pointer"
+                className="w-9 h-9 rounded-full bg-white hover:bg-rose-50 text-[#351000] border-2 border-pink-300 flex items-center justify-center font-black text-base shadow-sm active:scale-90 cursor-pointer"
                 type="button"
+                aria-label="Cerrar armario"
               >
                 ✕
               </button>
             </div>
 
-            {/* Main Category Tabs: "Mi Habitación" vs "Mi Avatar" */}
+            {/* Main Category Tabs: "Mi Niña" vs "Mi Habitación" */}
             <div className="flex p-2 bg-[#ffeae1] border-b border-[#ffd0bb] gap-2">
-              <button
-                onClick={() => {
-                  playPop(440);
-                  setMainDrawerTab('habitacion');
-                }}
-                className={`flex-1 py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  mainDrawerTab === 'habitacion'
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-md scale-[1.02]'
-                    : 'bg-white/80 text-[#855300] hover:bg-white'
-                }`}
-                type="button"
-              >
-                <span>🏠</span>
-                <span>Mi Habitación ({AVATAR_ROOM_CATALOG.filter(i => i.category === 'bed' || i.category === 'desk' || i.category === 'rug' || i.category === 'wallpaper' || i.category === 'floor' || i.category === 'decor' || i.category === 'pet').length})</span>
-              </button>
-
               <button
                 onClick={() => {
                   playPop(440);
@@ -1442,6 +1442,22 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
               >
                 <span>👗</span>
                 <span>Mi Niña ({AVATAR_ROOM_CATALOG.filter(i => i.category === 'outfit' || i.category === 'head' || i.category === 'hand').length + HAIR_STYLE_OPTIONS.length})</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  playPop(440);
+                  setMainDrawerTab('habitacion');
+                }}
+                className={`flex-1 py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  mainDrawerTab === 'habitacion'
+                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-md scale-[1.02]'
+                    : 'bg-white/80 text-[#855300] hover:bg-white'
+                }`}
+                type="button"
+              >
+                <span>🏠</span>
+                <span>Mi Habitación ({AVATAR_ROOM_CATALOG.filter(i => i.category === 'bed' || i.category === 'desk' || i.category === 'rug' || i.category === 'wallpaper' || i.category === 'floor' || i.category === 'decor' || i.category === 'pet').length})</span>
               </button>
             </div>
 
@@ -1868,17 +1884,21 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
             </div>
 
             {/* Drawer Footer Tip */}
-            <div className="p-3 bg-amber-50/80 border-t border-[#ffd0bb] flex items-center justify-between text-xs text-[#855300] font-bold">
-              <span className="flex items-center gap-1">
+            <div className="p-3 bg-amber-50/90 border-t border-[#ffd0bb] flex items-center justify-between text-xs text-[#855300] font-bold">
+              <span className="flex items-center gap-1.5 text-[11px] sm:text-xs">
                 <span>💡</span>
-                <span>Completa lecciones en los mundos para ganar más muebles gratis</span>
+                <span className="truncate max-w-[200px] sm:max-w-none">Completa lecciones en los mundos para ganar premios</span>
               </span>
               <button
                 type="button"
-                onClick={() => setIsDrawerOpen(false)}
-                className="bg-white hover:bg-orange-50 border border-[#ffd0bb] px-3 py-1 rounded-xl text-xs font-black text-[#351000] active:scale-95 cursor-pointer"
+                onClick={() => {
+                  playPop(350);
+                  setIsDrawerOpen(false);
+                }}
+                className="bg-white hover:bg-rose-50 border-2 border-pink-300 px-4 py-1.5 rounded-xl text-xs font-black text-[#351000] active:scale-95 shadow-xs cursor-pointer flex items-center gap-1"
               >
-                Cerrar
+                <span>✕</span>
+                <span>Cerrar</span>
               </button>
             </div>
           </div>

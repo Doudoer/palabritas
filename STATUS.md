@@ -1,13 +1,28 @@
 # 📋 Palabritas - Registro de Estado y Checkpoints (STATUS)
 
 > **Documento Vivo de Estado, Arquitectura, Pruebas y Despliegues Continuos.**  
-> **Última Actualización:** 18 de Octubre, 2026 (15:45 UTC-4)  
+> **Última Actualización:** 18 de Octubre, 2026 (17:25 UTC-4)  
 > **Repositorio Oficial:** [https://github.com/Doudoer/palabritas](https://github.com/Doudoer/palabritas)  
 > **Servidor en Producción:** `http://167.235.21.59` (Nginx 1.27.5 en Docker)
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.13 - Logo Oficial 3D en App y APK, Avatar Niña con Coletas y Vestido, y Habitación Mágica Totalmente Interactiva`
+## 📌 Checkpoint Actual: `v0.1.14 - Corrección Completa de Mi Habitación, Armario Mágico y Minijuegos en Móvil y APK`
+- **Hash de Commit:** Pendiente de push a `origin/main` (auto-desplegado en VPS `167.235.21.59`)
+- **Estado General:** ✅ 100% Funcional y Verificado con Simulación Móvil en Google Chrome.
+  1. **Solución del Avatar Cortado en Pantallas Móviles (`AvatarRoomView.tsx`):**
+     - **Causa raíz:** El avatar y los muebles estaban anidados dentro del contenedor del suelo (`floorRef`) que tenía `h-[38%]` y `overflow-hidden`. En pantallas móviles (donde el stage medía ~290px), el suelo medía solo ~110px de alto, cortando los 60px superiores del avatar (ojos, frente, coletas y bocadillos).
+     - **Corrección:** Se desacopló el suelo para que solo contenga su patrón de madera y la onda expansiva del tap, cerrando su div con `overflow-hidden` de forma aislada. La habitación ahora tiene altura mínima garantizada (`min-h-[460px] h-[460px] sm:h-[500px]`), y el avatar y muebles son hijos directos del stage con z-index escalonado (`z-15` a `z-30`). El avatar es 100% visible de pies a cabeza con amplio espacio para sus bocadillos de diálogo.
+  2. **Solución de "Mi Armario" que no abría / se quedaba fuera de pantalla:**
+     - **Causa raíz:** El modal del armario usaba `items-end` con animación `slide-in-from-bottom` de Tailwind (que no existía en el bundle de producción sin plugin) y `z-50`, provocando que en WebView móvil quedara empujado debajo del borde inferior de la pantalla o tapado por el dock de navegación.
+     - **Corrección:** Se reestructuró como un modal centrado con `fixed inset-0 z-[100] bg-black/65 backdrop-blur-md flex items-center justify-center p-3 sm:p-4`, animación CSS suave `modalPop`, botones táctiles de cierre destacados (`✕` en cabecera y `Cerrar` en pie), cierre al tocar el fondo, y pestañas predeterminadas a `👗 Mi Niña` al abrir el armario y `🏠 Mi Habitación` al tocar un slot de mueble.
+  3. **Solución del Minijuego de Rasca y Gana en Dispositivos Táctiles (`PremiosScreen.tsx`):**
+     - **Causa raíz:** En pantallas táctiles, el arrastre del dedo provocaba el scroll vertical de la página cancelando el rascado del canvas.
+     - **Corrección:** Se añadió `if (e.cancelable) e.preventDefault();` en `onTouchStart` y `handleScratchMove`, junto con `touch-none` en el canvas.
+  4. **Simulación y Pruebas Automatizadas:**
+     - 531 pruebas lógicas y de ortografía pasando al 100% (`bun scripts/test-game-logic.ts`).
+     - Script de simulación automatizada en Chrome móvil (`scripts/simulate-avatar-room.cjs`) ejecutando todo el flujo: caminar en el cuarto, celebrar, hablar, abrir armario, cambiar pestaña a habitación, equipar cama nube, cerrar armario y rascar lámina secreta con 5 capturas generadas.
+     - `bun run build` y contenedor Docker `palabritas-app` actualizado y probado.
 - **Hash de Commit:** `dc291cf` (Sincronizado con GitHub `origin/main` y auto-desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ Producción Lista. Integración de los requerimientos visuales e interactivos solicitados por el usuario:
   1. **Nuevo Logo 3D Oficial en Web, PWA y APK Android:**
