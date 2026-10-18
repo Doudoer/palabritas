@@ -7,12 +7,16 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.8 - Motor Híbrido de Audio Dual (Stream de Audio MP3 de Alta Definición + Proxy Nginx /api/tts + Fallback SpeechSynthesis)`
-- **Hash de Commit:** `517b16c` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
-- **Estado General:** ✅ Producción Estable. Se implementó una arquitectura de audio híbrida dual de alta fidelidad:
-  1. **Motor Primario (Stream de Audio MP3 Nativo):** Utiliza `HTMLAudioElement` con el proxy de servidor `/api/tts` (alimentado por síntesis vocal en español con calidad de estudio). Funciona en el 100% de los dispositivos, incluidos teléfonos y PCs con Windows que no tienen paquetes de voz en español instalados, dispositivos Android sin Google TTS, y Safari/iOS sin verse afectado por el interruptor físico de silencio.
-  2. **Motor Secundario (SpeechSynthesis Fallback):** Si el dispositivo está sin conexión a internet, conmuta transparentemente a la API nativa del navegador con recuperación de cola y voces cacheadas.
-- **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía (0 fallos) + 4 pruebas de caligrafía infantil (4/4 pasando) + `tsc --noEmit` limpio + Docker build exitoso.
+## 📌 Checkpoint Actual: `v0.1.9 - Rediseño Integral de Recompensas y Premios (Álbum Dinámico de Mundos, Rasca y Descubre, Cofre Sorpresa, Medallas y Tienda de Disfraces)`
+- **Hash de Commit:** Pendiente de commit
+- **Estado General:** ✅ Producción Estable. Se modernizó y transformó completamente la pestaña de **Premios y Recompensas**:
+  1. **Mi Álbum Mágico:** Conectado dinámicamente con los 29 mundos del abecedario en `WORLDS_DATA` y stickers especiales. Cada mundo completado desbloquea su sticker exclusivo con su emoji, fonema y palabra ancla. Al tocar cualquier sticker desbloqueado, se reproduce animación 3D, confeti, sonido de arpegio y pronunciación fonética clara en español.
+  2. **Minijuego "Rasca y Descubre":** Lienzo interactivo holográfico que inicia al 0% y permite raspar con el dedo o ratón, con cálculo en tiempo real del porcentaje, sonidos de raspado, háptica y botón para reclamar el sticker descubierto y ganar +50 estrellas.
+  3. **Cofre Sorpresa de Estrellas:** Minijuego de apertura de cofre por 30 estrellas doradas con sacudida 3D, lluvia de confeti y recompensas de stickers sorpresa coleccionables.
+  4. **Tienda de Disfraces de Chispita:** Sección donde los niños pueden canjear sus estrellas por accesorios divertidos (Corona de Oro 👑, Sombrero de Mago 🧙, Gafas de Explorador 🥽, Casco Espacial 🚀, Corona de Flores 🌺, Capa de Superhéroe 🦸). Al equipar un accesorio, Chispita lo luce en su avatar en toda la aplicación con voz y animación.
+  5. **Medallas de Honor Fonético:** Trofeos calculados en tiempo real con datos auténticos del progreso del jugador (`completedWorlds`, `masteredLetters`, `learnedWords`, `streakDays`, `starsCount`) con barras de avance paso a paso.
+  6. **Gran Cofre de Celebración Personalizado:** El modal de victoria celebra dinámicamente el mundo específico recién completado, eliminando textos genéricos o fijos.
+- **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía (0 fallos) + `tsc --noEmit` limpio + Docker build exitoso.
 
 ---
 

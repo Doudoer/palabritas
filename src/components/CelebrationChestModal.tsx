@@ -2,12 +2,20 @@ import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { ASSETS } from '../data/appData';
 import { playPop, playSparkleChime, playFanfare, speakSpanish, triggerHaptic } from '../utils/audio';
+import { loadPlayerProgress } from '../utils/playerProgress';
 
 interface CelebrationChestModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGoToAlbum: () => void;
   onAddStars: (amount: number) => void;
+  worldTitle?: string;
+  worldEmoji?: string;
+  focusLetter?: string;
+  starsCount?: number;
+  unlockedStickerName?: string;
+  unlockedStickerEmoji?: string;
+  learnedWordsList?: string[];
 }
 
 export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
@@ -15,23 +23,40 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
   onClose,
   onGoToAlbum,
   onAddStars,
+  worldTitle = 'Mundo de Letras Mágicas',
+  worldEmoji = '⭐',
+  focusLetter,
+  starsCount,
+  unlockedStickerName,
+  unlockedStickerEmoji,
+  learnedWordsList,
 }) => {
+  const progress = loadPlayerProgress();
+  const currentTotalStars = starsCount !== undefined ? starsCount : progress.starsCount;
+  const childName = progress.playerName || 'Pequeño Campeón';
+
+  const defaultStickerName = unlockedStickerName || (focusLetter ? `Sticker Letra ${focusLetter}` : 'Sticker Mágico');
+  const defaultStickerEmoji = unlockedStickerEmoji || worldEmoji || '✨';
+  const displayWords = learnedWordsList && learnedWordsList.length > 0 ? learnedWordsList : progress.learnedWords.slice(-4);
+
   useEffect(() => {
     if (isOpen) {
       playFanfare();
       triggerHaptic([40, 50, 40, 60, 120]);
       onAddStars(25);
-      speakSpanish('¡Misión cumplida! ¡Mundo de fonemas S y R superado! ¡Mira todas tus recompensas!');
+      
+      const speechMsg = `¡Misión cumplida! ¡${worldTitle} superado! ¡Has ganado veinticinco estrellas doradas!`;
+      speakSpanish(speechMsg);
 
       // Big celebratory fireworks confetti
       confetti({
-        particleCount: 80,
+        particleCount: 90,
         spread: 90,
         origin: { y: 0.35 },
         colors: ['#f59e0b', '#6cf8bb', '#42bbff', '#f87171', '#ffb95f'],
       });
     }
-  }, [isOpen]);
+  }, [isOpen, worldTitle]);
 
   if (!isOpen) return null;
 
@@ -57,11 +82,12 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
             <span className="material-symbols-outlined text-yellow-100 animate-pulse">hotel_class</span>
           </div>
 
-          <h1 className="text-2xl text-[#351000] font-black mt-3 leading-tight tracking-tight">
-            ¡Mundo de Fonemas <span className="text-[#006591]">/S/</span> y <span className="text-[#006c49]">/R/</span>!
+          <h1 className="text-2xl text-[#351000] font-black mt-3 leading-tight tracking-tight flex items-center justify-center gap-2 flex-wrap">
+            <span>{worldTitle}</span>
+            <span className="text-2xl">{worldEmoji}</span>
           </h1>
           <p className="text-xs text-[#534434] font-semibold max-w-xs mt-1">
-            ¡Superaste todos los retos con una sonrisa brillante!
+            ¡Superaste todos los ejercicios con una sonrisa brillante!
           </p>
 
           {/* Bocadillo de Chispita */}
@@ -81,7 +107,7 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
                 Chispita dice:
               </div>
               <p className="text-xs text-[#351000] font-medium leading-snug">
-                "¡Increíble trabajo, <strong className="text-[#855300] font-bold">Mateo</strong>! ¡Eres todo un explorador de letras legendario!"
+                "¡Increíble trabajo, <strong className="text-[#855300] font-bold">{childName}</strong>! ¡Eres un explorador de letras legendario!"
               </p>
             </div>
           </div>
@@ -120,7 +146,7 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
               <span>Tus Nuevos Premios</span>
             </h2>
             <span className="text-xs font-bold text-[#006c49] bg-[#6cf8bb]/40 px-2.5 py-1 rounded-full">
-              4 Desbloqueados
+              ¡Recompensas Listas!
             </span>
           </div>
 
@@ -136,7 +162,7 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
                   <span className="bg-amber-100 text-[#613b00] text-[10px] px-2 py-0.5 rounded-full font-bold">¡NUEVO!</span>
                 </div>
                 <p className="text-xs text-[#534434]">
-                  Total acumulado: <strong className="text-[#351000] font-bold">150 ⭐</strong>
+                  Total acumulado: <strong className="text-[#351000] font-bold">{currentTotalStars + 25} ⭐</strong>
                 </p>
               </div>
             </div>
@@ -145,74 +171,45 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
             </div>
           </div>
 
-          {/* Recompensa 2: Medalla */}
+          {/* Recompensa 2: Sticker de Colección para el Álbum */}
           <div className="bg-[#fff1eb] rounded-2xl p-3 shadow-sm flex items-start gap-3 border border-[#ffd0bb]">
-            <div className="w-12 h-12 rounded-full bg-[#6cf8bb] flex items-center justify-center shadow-[0_4px_0_0_#4edea3] shrink-0 text-[#006c49]">
-              <span className="material-symbols-outlined text-2xl">military_tech</span>
+            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-200 to-emerald-200 flex items-center justify-center text-3xl shadow-[0_4px_0_0_#4edea3] shrink-0">
+              {defaultStickerEmoji}
             </div>
             <div className="flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-[#006c49] font-bold uppercase tracking-wider">Medalla de Honor</span>
-                <span className="material-symbols-outlined text-[#006c49] text-sm">verified</span>
+                <span className="text-[10px] text-[#006c49] font-bold uppercase tracking-wider">Sticker Desbloqueado</span>
+                <span className="bg-[#6cf8bb] text-[#00714d] text-[10px] font-bold px-2 py-0.5 rounded-full">¡AL ÁLBUM!</span>
               </div>
               <h3 className="text-sm text-[#351000] font-bold mt-0.5">
-                Maestro del Sonido /S/
+                {defaultStickerName}
               </h3>
               <p className="text-xs text-[#534434] font-medium">
-                "Serpiente Audaz y Silbadora" 🐍
+                ¡Se ha añadido automáticamente a tu Álbum de Stickers 3D!
               </p>
             </div>
           </div>
 
-          {/* Recompensa 3: 3 Stickers */}
-          <div className="bg-[#fff1eb] rounded-2xl p-3 shadow-sm flex flex-col gap-2 border border-[#ffd0bb]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[#006591] text-[18px]">auto_fix_high</span>
-                <span className="text-sm text-[#351000] font-bold">Stickers Desbloqueados</span>
+          {/* Recompensa 3: Palabras Dominadas */}
+          {displayWords.length > 0 && (
+            <div className="bg-[#fff1eb] rounded-2xl p-3 shadow-sm flex flex-col gap-1.5 border border-[#ffd0bb]">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#351000] font-bold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[#006c49] text-[16px]">spellcheck</span>
+                  Palabras de Esta Aventura
+                </span>
+                <span className="text-[10px] font-bold text-[#006c49] bg-[#6cf8bb] px-2 py-0.5 rounded-full">¡Completadas!</span>
               </div>
-              <span className="text-xs text-[#006591] font-bold">3 nuevos</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 mt-1">
-              <div className="bg-white rounded-xl p-2 flex flex-col items-center text-center shadow-xs">
-                <div className="w-10 h-10 rounded-full bg-[#c9e6ff] flex items-center justify-center text-2xl mb-1">
-                  🚀
-                </div>
-                <span className="text-xs text-[#351000] font-bold">Cohete</span>
-              </div>
-              <div className="bg-white rounded-xl p-2 flex flex-col items-center text-center shadow-xs">
-                <div className="w-10 h-10 rounded-full bg-[#6ffbbe] flex items-center justify-center text-2xl mb-1">
-                  🐸
-                </div>
-                <span className="text-xs text-[#351000] font-bold">Rana</span>
-              </div>
-              <div className="bg-white rounded-xl p-2 flex flex-col items-center text-center shadow-xs">
-                <div className="w-10 h-10 rounded-full bg-[#ffddb8] flex items-center justify-center text-2xl mb-1">
-                  🌈
-                </div>
-                <span className="text-xs text-[#351000] font-bold">Arcoíris</span>
+              <div className="flex flex-wrap gap-2 pt-0.5">
+                {displayWords.map(w => (
+                  <div key={w} className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-xs text-xs font-bold text-[#855300] border border-[#ffd0bb]">
+                    <span className="material-symbols-outlined text-[#006c49] text-[14px]">check_circle</span>
+                    <span>{w}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* Recompensa 4: Palabras */}
-          <div className="bg-[#fff1eb] rounded-2xl p-3 shadow-sm flex flex-col gap-1.5 border border-[#ffd0bb]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#351000] font-bold flex items-center gap-1">
-                <span className="material-symbols-outlined text-[#006c49] text-[16px]">spellcheck</span>
-                Palabras Dominadas
-              </span>
-              <span className="text-[10px] font-bold text-[#006c49] bg-[#6cf8bb] px-2 py-0.5 rounded-full">¡100% Precisión!</span>
-            </div>
-            <div className="flex flex-wrap gap-2 pt-0.5">
-              {['Sol', 'Sopa', 'Mesa', 'Pera'].map(w => (
-                <div key={w} className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-xs text-xs font-bold text-[#855300] border border-[#ffd0bb]">
-                  <span className="material-symbols-outlined text-[#006c49] text-[14px]">check_circle</span>
-                  <span>{w}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Acciones Finales */}
@@ -248,3 +245,4 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
     </div>
   );
 };
+

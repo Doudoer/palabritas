@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ASSETS } from './data/appData';
+import { ASSETS, CHISPITA_COSTUMES } from './data/appData';
 import { MundosScreen } from './components/MundosScreen';
 import { PalabrasScreen } from './components/PalabrasScreen';
 import { TrazosScreen } from './components/TrazosScreen';
@@ -51,7 +51,10 @@ export default function App() {
   const [isPedagogicalReportOpen, setIsPedagogicalReportOpen] = useState(false);
   const [isPhonicsSessionOpen, setIsPhonicsSessionOpen] = useState(false);
   const [isCelebrationModalOpen, setIsCelebrationModalOpen] = useState(false);
+  const [celebrationWorldId, setCelebrationWorldId] = useState<number | null>(null);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+
+  const equippedCostumeItem = CHISPITA_COSTUMES.find(c => c.id === playerProgress.equippedCostume);
 
   const handleAddStars = (amount: number) => {
     const { newTotal } = addPlayerStars(amount);
@@ -62,21 +65,8 @@ export default function App() {
   const handleCompleteWorld = (worldId: number) => {
     const result = completePlayerWorld(worldId);
     setPlayerProgress(result.updatedProgress);
-
-    const nextWorld = WORLDS_DATA.find(w => w.id === worldId + 1);
-    playFanfare();
-    confetti({
-      particleCount: 85,
-      spread: 80,
-      origin: { y: 0.6 },
-      colors: ['#6cf8bb', '#f59e0b', '#42bbff', '#ffd0bb'],
-    });
-
-    if (nextWorld) {
-      speakSpanish(`¡Excelente! Has completado el ${nextWorld.numberLabel ? `Mundo ${worldId}` : 'nivel'}. ¡Se ha desbloqueado el ${nextWorld.numberLabel}: ${nextWorld.title}!`);
-    } else {
-      speakSpanish('¡Increíble! ¡Has completado todas las familias de letras del abecedario de Palabritas!');
-    }
+    setCelebrationWorldId(worldId);
+    setIsCelebrationModalOpen(true);
   };
 
   const handleTabChange = (tab: NavigationTab) => {
@@ -200,16 +190,21 @@ export default function App() {
               <span className="material-symbols-outlined text-[22px]">lock</span>
             </button>
 
-            {/* Profile Avatar Chispita */}
+            {/* Profile Avatar Chispita with Equipped Costume Badge */}
             <div
               onClick={handleChispitaHeaderClick}
-              className="p-0.5 rounded-full bg-[#6cf8bb] shadow-[0_3px_0_0_#4edea3] cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+              className="relative p-0.5 rounded-full bg-[#6cf8bb] shadow-[0_3px_0_0_#4edea3] cursor-pointer hover:scale-105 active:scale-95 transition-transform"
             >
               <img
                 alt="Profile"
                 className="w-8 h-8 rounded-full object-cover"
                 src={ASSETS.chispitaAvatar}
               />
+              {equippedCostumeItem && (
+                <span className="absolute -top-2.5 -right-1 text-sm filter drop-shadow animate-bounce">
+                  {equippedCostumeItem.emoji}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -419,15 +414,32 @@ export default function App() {
       />
 
       {/* Grand Celebration Chest Modal */}
-      <CelebrationChestModal
-        isOpen={isCelebrationModalOpen}
-        onClose={() => setIsCelebrationModalOpen(false)}
-        onGoToAlbum={() => {
-          setIsCelebrationModalOpen(false);
-          handleTabChange('premios');
-        }}
-        onAddStars={handleAddStars}
-      />
+      {(() => {
+        const activeCelebrationWorld = WORLDS_DATA.find(
+          w => w.id === (celebrationWorldId || activeAdventureWorldId || playerProgress.currentWorldId || 1)
+        );
+        return (
+          <CelebrationChestModal
+            isOpen={isCelebrationModalOpen}
+            onClose={() => {
+              setIsCelebrationModalOpen(false);
+              setCelebrationWorldId(null);
+            }}
+            onGoToAlbum={() => {
+              setIsCelebrationModalOpen(false);
+              setCelebrationWorldId(null);
+              handleTabChange('premios');
+            }}
+            onAddStars={handleAddStars}
+            worldTitle={activeCelebrationWorld?.title || 'Mundo Fonético'}
+            worldEmoji={activeCelebrationWorld?.targetEmoji || '⭐'}
+            focusLetter={activeCelebrationWorld?.focusLetter}
+            starsCount={playerProgress.starsCount}
+            unlockedStickerName={activeCelebrationWorld ? `Sticker ${activeCelebrationWorld.targetWord}` : undefined}
+            unlockedStickerEmoji={activeCelebrationWorld?.targetEmoji}
+          />
+        );
+      })()}
 
       {/* Install on Mobile / APK Modal */}
       <InstallAppModal

@@ -23,6 +23,9 @@ export interface PlayerProgress {
   learnedWords: string[];        // Words assembled or typed successfully
   streakDays: number;
   lastPlayedDate: string;
+  equippedCostume?: string;      // ID of equipped costume for Chispita (e.g. 'corona_oro')
+  unlockedCostumes?: string[];   // IDs of unlocked Chispita accessories
+  playerName?: string;           // Optional child's name
 }
 
 export function getTodayDateString(): string {
@@ -37,11 +40,14 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   starsCount: 125,
   completedWorlds: [1], // Mundo 1 (Vocales) completed by default for nice onboarding
   currentWorldId: 2,  // Mundo 2 (M de Manzana) is active
-  unlockedStickers: ['stk-1', 'stk-2', 'stk-3'],
+  unlockedStickers: ['stk-world-1', 'stk-1', 'stk-2', 'spec-dragon'],
   masteredLetters: ['A', 'E', 'I', 'O', 'U'],
   learnedWords: ['ALA', 'MAMA', 'OSO'],
   streakDays: 3,
   lastPlayedDate: getTodayDateString(),
+  equippedCostume: '',
+  unlockedCostumes: [],
+  playerName: 'Pequeño Campeón',
 };
 
 export function loadPlayerProgress(): PlayerProgress {
@@ -69,11 +75,14 @@ export function loadPlayerProgress(): PlayerProgress {
       currentWorldId,
       unlockedStickers: Array.isArray(parsed.unlockedStickers) && parsed.unlockedStickers.length > 0
         ? parsed.unlockedStickers
-        : ['stk-1', 'stk-2', 'stk-3'],
+        : ['stk-world-1', 'stk-1', 'stk-2', 'spec-dragon'],
       masteredLetters: Array.isArray(parsed.masteredLetters) ? parsed.masteredLetters : ['A', 'E', 'I', 'O', 'U'],
       learnedWords: Array.isArray(parsed.learnedWords) ? parsed.learnedWords : ['ALA', 'MAMA', 'OSO'],
       streakDays: typeof parsed.streakDays === 'number' ? parsed.streakDays : 3,
       lastPlayedDate: today,
+      equippedCostume: typeof parsed.equippedCostume === 'string' ? parsed.equippedCostume : '',
+      unlockedCostumes: Array.isArray(parsed.unlockedCostumes) ? parsed.unlockedCostumes : [],
+      playerName: typeof parsed.playerName === 'string' && parsed.playerName ? parsed.playerName : 'Pequeño Campeón',
     };
 
     return progress;
@@ -185,7 +194,63 @@ export function isWorldUnlocked(worldId: number, completedWorlds: number[]): boo
   return completedWorlds.includes(worldId - 1) || completedWorlds.includes(worldId);
 }
 
+export function buyPlayerCostume(costumeId: string, cost: number): { success: boolean; newTotalStars: number; message: string } {
+  const current = loadPlayerProgress();
+  if (current.unlockedCostumes?.includes(costumeId)) {
+    return { success: true, newTotalStars: current.starsCount, message: '¡Ya tienes este accesorio!' };
+  }
+  if (current.starsCount < cost) {
+    return { success: false, newTotalStars: current.starsCount, message: `Necesitas ${cost} estrellas para desbloquearlo.` };
+  }
+
+  current.starsCount -= cost;
+  current.unlockedCostumes = [...(current.unlockedCostumes || []), costumeId];
+  current.equippedCostume = costumeId;
+  savePlayerProgress(current);
+
+  return { success: true, newTotalStars: current.starsCount, message: '¡Accesorio desbloqueado y equipado!' };
+}
+
+export function equipPlayerCostume(costumeId: string): void {
+  const current = loadPlayerProgress();
+  current.equippedCostume = current.equippedCostume === costumeId ? '' : costumeId;
+  savePlayerProgress(current);
+}
+
+export function setPlayerName(name: string): void {
+  const current = loadPlayerProgress();
+  current.playerName = name.trim() || 'Pequeño Campeón';
+  savePlayerProgress(current);
+}
+
+export function calculatePlayerLevel(stars: number, completedWorldsCount: number): {
+  level: number;
+  title: string;
+  progressPercent: number;
+  nextLevelThreshold: number;
+} {
+  // Levels based on both stars and completed worlds
+  if (completedWorldsCount >= 15 || stars >= 350) {
+    return { level: 5, title: 'Gran Sabio de las Palabras', progressPercent: 100, nextLevelThreshold: 400 };
+  }
+  if (completedWorldsCount >= 8 || stars >= 220) {
+    const pct = Math.min(99, Math.round(((stars - 220) / (350 - 220)) * 100));
+    return { level: 4, title: 'Maestro de la Lectura', progressPercent: Math.max(15, pct), nextLevelThreshold: 350 };
+  }
+  if (completedWorldsCount >= 4 || stars >= 130) {
+    const pct = Math.min(99, Math.round(((stars - 130) / (220 - 130)) * 100));
+    return { level: 3, title: 'Lector Aventurero', progressPercent: Math.max(15, pct), nextLevelThreshold: 220 };
+  }
+  if (completedWorldsCount >= 2 || stars >= 60) {
+    const pct = Math.min(99, Math.round(((stars - 60) / (130 - 60)) * 100));
+    return { level: 2, title: 'Detective de Letras', progressPercent: Math.max(15, pct), nextLevelThreshold: 130 };
+  }
+  const pct = Math.min(99, Math.round((stars / 60) * 100));
+  return { level: 1, title: 'Explorador Novato', progressPercent: Math.max(10, pct), nextLevelThreshold: 60 };
+}
+
 export function resetPlayerProgressForTesting(): PlayerProgress {
   savePlayerProgress(DEFAULT_PROGRESS);
   return { ...DEFAULT_PROGRESS };
 }
+
