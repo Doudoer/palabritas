@@ -1,6 +1,10 @@
 /**
  * Complete Spanish Alphabet Dataset for Palabritas (A to Z + Ñ)
  * Provides stroke data, phonetic sounds, target words, syllables and emojis.
+ * All letter paths are calibrated against the Montessori 3-line ruling:
+ * - Upper guideline (red): y ~ 60
+ * - Middle guideline (blue dashed): y ~ 140
+ * - Base guideline (green solid): y ~ 236
  */
 
 export interface LetterExercise {
@@ -15,11 +19,13 @@ export interface LetterExercise {
   emoji: string;
   group: 'vocal' | 'consonante-inicial' | 'consonante-media' | 'consonante-avanzada';
   color: string;
-  // SVG paths for 280x300 viewBox
+  // SVG paths for 280x280 viewBox
   upperPath: string;
   lowerPath: string;
   upperSteps: Array<{ x: number; y: number; label: string }>;
+  lowerSteps?: Array<{ x: number; y: number; label: string }>;
   hint: string;
+  lowerHint?: string;
 }
 
 export const ALPHABET_DATA: LetterExercise[] = [
@@ -36,14 +42,19 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'vocal',
     color: '#f59e0b',
     upperPath: 'M 60 240 L 140 60 L 220 240 M 95 170 L 185 170',
-    lowerPath: 'M 190 120 A 45 45 0 1 0 190 210 M 190 90 L 190 240',
+    lowerPath: 'M 135 142 A 45 46 0 1 0 135 234 A 45 46 0 1 0 135 142 M 180 142 L 180 226 Q 180 236 195 236',
     upperSteps: [
       { x: 60, y: 240, label: '1' },
       { x: 140, y: 60, label: '2' },
       { x: 220, y: 240, label: '3' },
       { x: 140, y: 170, label: '4' },
     ],
+    lowerSteps: [
+      { x: 135, y: 142, label: '1' },
+      { x: 180, y: 142, label: '2' },
+    ],
     hint: 'Sube en diagonal, baja y cruza el cinturón.',
+    lowerHint: 'Gira la bolita redonda y luego baja el palito con su colita.',
   },
   {
     letter: 'B',
@@ -58,14 +69,19 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-media',
     color: '#006591',
     upperPath: 'M 70 240 L 70 60 Q 170 60 170 125 Q 170 150 140 150 Q 185 150 185 240 L 70 240',
-    lowerPath: 'M 80 60 L 80 240 Q 80 150 140 150 Q 185 150 185 195 Q 185 240 140 240 Q 80 240 80 240',
+    lowerPath: 'M 90 60 L 90 236 M 135 142 A 45 46 0 1 0 135 234 A 45 46 0 1 0 135 142',
     upperSteps: [
       { x: 70, y: 60, label: '1' },
       { x: 70, y: 240, label: '2' },
       { x: 170, y: 105, label: '3' },
       { x: 180, y: 195, label: '4' },
     ],
+    lowerSteps: [
+      { x: 90, y: 60, label: '1' },
+      { x: 135, y: 142, label: '2' },
+    ],
     hint: 'Línea recta abajo, y dos pancitas redondas.',
+    lowerHint: 'Palito largo hacia abajo y pancita redonda a la derecha.',
   },
   {
     letter: 'C',
@@ -80,13 +96,17 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#f59e0b',
     upperPath: 'M 210 90 Q 140 50 85 105 Q 40 150 85 195 Q 140 250 210 210',
-    lowerPath: 'M 190 140 Q 140 110 100 150 Q 70 180 100 210 Q 140 245 190 220',
+    lowerPath: 'M 185 145 Q 140 120 100 150 Q 65 188 100 226 Q 140 250 185 228',
     upperSteps: [
       { x: 210, y: 90, label: '1' },
       { x: 60, y: 150, label: '2' },
       { x: 210, y: 210, label: '3' },
     ],
+    lowerSteps: [
+      { x: 185, y: 145, label: '1' },
+    ],
     hint: 'Curva como una luna creciente.',
+    lowerHint: 'Curva redondita como una media luna pequeña.',
   },
   {
     letter: 'D',
@@ -101,13 +121,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-media',
     color: '#006c49',
     upperPath: 'M 70 240 L 70 60 Q 210 60 210 150 Q 210 240 70 240',
-    lowerPath: 'M 190 60 L 190 240 M 190 190 A 45 45 0 1 1 190 140',
+    lowerPath: 'M 140 142 A 45 46 0 1 0 140 234 A 45 46 0 1 0 140 142 M 185 60 L 185 236',
     upperSteps: [
       { x: 70, y: 60, label: '1' },
       { x: 70, y: 240, label: '2' },
       { x: 200, y: 150, label: '3' },
     ],
+    lowerSteps: [
+      { x: 140, y: 142, label: '1' },
+      { x: 185, y: 60, label: '2' },
+    ],
     hint: 'Baja derecho y dale una gran barriga.',
+    lowerHint: 'Bolita redonda a la izquierda y palito alto a la derecha.',
   },
   {
     letter: 'E',
@@ -122,14 +147,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'vocal',
     color: '#f59e0b',
     upperPath: 'M 80 240 L 80 60 L 200 60 M 80 150 L 180 150 M 80 240 L 200 240',
-    lowerPath: 'M 70 180 L 190 180 Q 190 110 130 110 Q 70 110 70 180 Q 70 245 140 245 Q 180 245 200 220',
+    lowerPath: 'M 75 188 L 185 188 Q 185 140 130 140 Q 75 140 75 188 Q 75 236 135 236 Q 175 236 195 215',
     upperSteps: [
       { x: 80, y: 60, label: '1' },
       { x: 200, y: 60, label: '2' },
       { x: 180, y: 150, label: '3' },
       { x: 200, y: 240, label: '4' },
     ],
+    lowerSteps: [
+      { x: 75, y: 188, label: '1' },
+    ],
     hint: 'Columna recta y tres bracitos horizontales.',
+    lowerHint: 'Línea recta al centro, sube la curvita y dale la vuelta.',
   },
   {
     letter: 'F',
@@ -144,13 +173,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#006591',
     upperPath: 'M 80 240 L 80 60 L 205 60 M 80 150 L 180 150',
-    lowerPath: 'M 170 70 Q 130 60 130 100 L 130 240 M 90 145 L 170 145',
+    lowerPath: 'M 170 70 Q 130 60 130 100 L 130 236 M 90 145 L 170 145',
     upperSteps: [
       { x: 80, y: 60, label: '1' },
       { x: 205, y: 60, label: '2' },
       { x: 180, y: 150, label: '3' },
     ],
+    lowerSteps: [
+      { x: 170, y: 70, label: '1' },
+      { x: 90, y: 145, label: '2' },
+    ],
     hint: 'Línea parada y dos brazos que soplan fuerte.',
+    lowerHint: 'Bastoncito con curva arriba y cruza el cinturón.',
   },
   {
     letter: 'G',
@@ -165,14 +199,19 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#006c49',
     upperPath: 'M 210 95 Q 140 50 85 105 Q 40 150 85 195 Q 140 250 205 210 L 205 155 L 140 155',
-    lowerPath: 'M 190 140 A 40 40 0 1 0 190 210 L 190 260 Q 190 290 140 290 Q 100 290 90 270',
+    lowerPath: 'M 140 142 A 45 46 0 1 0 140 234 A 45 46 0 1 0 140 142 M 185 142 L 185 260 Q 185 290 140 290 Q 95 290 90 265',
     upperSteps: [
       { x: 210, y: 95, label: '1' },
       { x: 60, y: 150, label: '2' },
       { x: 205, y: 210, label: '3' },
       { x: 140, y: 155, label: '4' },
     ],
+    lowerSteps: [
+      { x: 140, y: 142, label: '1' },
+      { x: 185, y: 142, label: '2' },
+    ],
     hint: 'Redondito como la C y entra un pasito adentro.',
+    lowerHint: 'Bolita redonda arriba y cola de mono bajando a la izquierda.',
   },
   {
     letter: 'H',
@@ -187,13 +226,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#855300',
     upperPath: 'M 75 240 L 75 60 M 205 240 L 205 60 M 75 150 L 205 150',
-    lowerPath: 'M 80 60 L 80 240 M 80 140 Q 140 120 170 150 L 170 240',
+    lowerPath: 'M 80 60 L 80 236 M 80 160 Q 135 140 170 165 L 170 236',
     upperSteps: [
       { x: 75, y: 60, label: '1' },
       { x: 205, y: 60, label: '2' },
       { x: 140, y: 150, label: '3' },
     ],
+    lowerSteps: [
+      { x: 80, y: 60, label: '1' },
+      { x: 80, y: 160, label: '2' },
+    ],
     hint: 'Dos torres firmes unidas por un puente.',
+    lowerHint: 'Torre alta y sillita con su patita al suelo.',
   },
   {
     letter: 'I',
@@ -208,13 +252,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'vocal',
     color: '#f59e0b',
     upperPath: 'M 140 60 L 140 240 M 90 60 L 190 60 M 90 240 L 190 240',
-    lowerPath: 'M 140 120 L 140 240 M 140 80 L 140 85',
+    lowerPath: 'M 140 142 L 140 236 M 140 98 L 140 102',
     upperSteps: [
       { x: 140, y: 60, label: '1' },
       { x: 140, y: 240, label: '2' },
       { x: 140, y: 60, label: '3' },
     ],
+    lowerSteps: [
+      { x: 140, y: 142, label: '1' },
+      { x: 140, y: 98, label: '2' },
+    ],
     hint: 'Un soldadito alto con sombrero y zapatos.',
+    lowerHint: 'Palito derechito y un puntito mágico flotando.',
   },
   {
     letter: 'J',
@@ -229,13 +278,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#006591',
     upperPath: 'M 180 60 L 180 190 Q 180 240 120 240 Q 75 240 70 200 M 120 60 L 220 60',
-    lowerPath: 'M 160 120 L 160 260 Q 160 295 110 295 M 160 80 L 160 85',
+    lowerPath: 'M 160 140 L 160 260 Q 160 295 110 295 M 160 98 L 160 102',
     upperSteps: [
       { x: 180, y: 60, label: '1' },
       { x: 180, y: 190, label: '2' },
       { x: 90, y: 220, label: '3' },
     ],
+    lowerSteps: [
+      { x: 160, y: 140, label: '1' },
+      { x: 160, y: 98, label: '2' },
+    ],
     hint: 'Baja recto y haz un gancho como un paraguas.',
+    lowerHint: 'Gancho de paraguas hacia abajo y su puntito arriba.',
   },
   {
     letter: 'K',
@@ -250,14 +304,20 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#006c49',
     upperPath: 'M 80 240 L 80 60 M 190 70 L 80 160 L 190 240',
-    lowerPath: 'M 90 60 L 90 240 M 170 130 L 90 190 L 175 240',
+    lowerPath: 'M 90 60 L 90 236 M 170 145 L 90 195 L 175 236',
     upperSteps: [
       { x: 80, y: 60, label: '1' },
       { x: 190, y: 70, label: '2' },
       { x: 80, y: 160, label: '3' },
       { x: 190, y: 240, label: '4' },
     ],
+    lowerSteps: [
+      { x: 90, y: 60, label: '1' },
+      { x: 170, y: 145, label: '2' },
+      { x: 90, y: 195, label: '3' },
+    ],
     hint: 'Poste recto, una rama sube y otra baja.',
+    lowerHint: 'Tronco alto y dos ramitas pequeñas al lado.',
   },
   {
     letter: 'L',
@@ -272,13 +332,17 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-inicial',
     color: '#006591',
     upperPath: 'M 85 60 L 85 240 L 195 240',
-    lowerPath: 'M 140 60 L 140 240',
+    lowerPath: 'M 140 60 L 140 236',
     upperSteps: [
       { x: 85, y: 60, label: '1' },
       { x: 85, y: 240, label: '2' },
       { x: 195, y: 240, label: '3' },
     ],
+    lowerSteps: [
+      { x: 140, y: 60, label: '1' },
+    ],
     hint: 'Baja derechito y dobla a la derecha.',
+    lowerHint: 'Un palito bien alto y recto desde el cielo al suelo.',
   },
   {
     letter: 'M',
@@ -293,7 +357,7 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-inicial',
     color: '#f59e0b',
     upperPath: 'M 40 240 L 40 60 L 140 180 L 240 60 L 240 240',
-    lowerPath: 'M 50 240 L 50 120 Q 50 90 95 90 Q 140 90 140 130 L 140 240 M 140 120 Q 140 90 185 90 Q 230 90 230 130 L 230 240',
+    lowerPath: 'M 60 236 L 60 142 M 60 160 Q 60 142 95 142 Q 130 142 130 170 L 130 236 M 130 160 Q 130 142 175 142 Q 220 142 220 170 L 220 236',
     upperSteps: [
       { x: 40, y: 60, label: '1' },
       { x: 40, y: 240, label: '2' },
@@ -301,7 +365,13 @@ export const ALPHABET_DATA: LetterExercise[] = [
       { x: 240, y: 60, label: '4' },
       { x: 240, y: 240, label: '5' },
     ],
+    lowerSteps: [
+      { x: 60, y: 142, label: '1' },
+      { x: 60, y: 160, label: '2' },
+      { x: 130, y: 160, label: '3' },
+    ],
     hint: 'Sube, baja al centro, sube otra vez y baja al piso.',
+    lowerHint: 'Palito corto y dos montañitas redondas unidas.',
   },
   {
     letter: 'N',
@@ -316,13 +386,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-media',
     color: '#006c49',
     upperPath: 'M 70 240 L 70 60 L 200 240 L 200 60',
-    lowerPath: 'M 80 120 L 80 240 M 80 145 Q 130 115 165 150 L 165 240',
+    lowerPath: 'M 85 236 L 85 142 M 85 165 Q 85 142 135 142 Q 185 142 185 170 L 185 236',
     upperSteps: [
       { x: 70, y: 60, label: '1' },
       { x: 200, y: 240, label: '2' },
       { x: 200, y: 60, label: '3' },
     ],
+    lowerSteps: [
+      { x: 85, y: 142, label: '1' },
+      { x: 85, y: 165, label: '2' },
+    ],
     hint: 'Línea arriba, resbaladilla diagonal y sube recto.',
+    lowerHint: 'Palito corto y una sola montañita redonda.',
   },
   {
     letter: 'Ñ',
@@ -337,14 +412,20 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#f59e0b',
     upperPath: 'M 70 240 L 70 80 L 200 240 L 200 80 M 85 40 Q 135 20 185 45',
-    lowerPath: 'M 80 135 L 80 240 M 80 160 Q 130 130 165 165 L 165 240 M 90 95 Q 130 80 165 100',
+    lowerPath: 'M 85 236 L 85 142 M 85 165 Q 85 142 135 142 Q 185 142 185 170 L 185 236 M 90 95 Q 135 80 180 98',
     upperSteps: [
       { x: 70, y: 80, label: '1' },
       { x: 200, y: 240, label: '2' },
       { x: 200, y: 80, label: '3' },
       { x: 135, y: 35, label: '4' },
     ],
+    lowerSteps: [
+      { x: 85, y: 142, label: '1' },
+      { x: 85, y: 165, label: '2' },
+      { x: 135, y: 90, label: '3' },
+    ],
     hint: 'Como la N pero con un sombrerito ondulado.',
+    lowerHint: 'Letra n con su sombrerito de ola arriba.',
   },
   {
     letter: 'O',
@@ -359,14 +440,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'vocal',
     color: '#f59e0b',
     upperPath: 'M 140 60 A 75 90 0 1 0 140 240 A 75 90 0 1 0 140 60 Z',
-    lowerPath: 'M 140 120 A 50 60 0 1 0 140 240 A 50 60 0 1 0 140 120 Z',
+    lowerPath: 'M 140 142 A 45 46 0 1 0 140 234 A 45 46 0 1 0 140 142 Z',
     upperSteps: [
       { x: 140, y: 60, label: '1' },
       { x: 65, y: 150, label: '2' },
       { x: 140, y: 240, label: '3' },
       { x: 215, y: 150, label: '4' },
     ],
+    lowerSteps: [
+      { x: 140, y: 142, label: '1' },
+    ],
     hint: 'Gira redondo como una pelota sin parar.',
+    lowerHint: 'Gira en círculo redondo como una rosquilla.',
   },
   {
     letter: 'P',
@@ -381,14 +466,19 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-inicial',
     color: '#006591',
     upperPath: 'M 75 240 L 75 60 L 155 60 Q 205 60 205 115 Q 205 170 155 170 L 75 170',
-    lowerPath: 'M 90 120 L 90 280 M 90 190 A 45 45 0 1 0 90 135',
+    lowerPath: 'M 95 140 L 95 280 M 140 142 A 45 46 0 1 0 140 234 A 45 46 0 1 0 140 142',
     upperSteps: [
       { x: 75, y: 60, label: '1' },
       { x: 75, y: 240, label: '2' },
       { x: 195, y: 115, label: '3' },
       { x: 75, y: 170, label: '4' },
     ],
+    lowerSteps: [
+      { x: 95, y: 140, label: '1' },
+      { x: 140, y: 142, label: '2' },
+    ],
     hint: 'Palito largo hacia abajo y cabeza redondita arriba.',
+    lowerHint: 'Baja el palito al sótano y haz una pancita redonda arriba.',
   },
   {
     letter: 'Q',
@@ -403,13 +493,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#006c49',
     upperPath: 'M 140 60 A 75 85 0 1 0 140 230 A 75 85 0 1 0 140 60 Z M 165 190 L 225 245',
-    lowerPath: 'M 185 120 L 185 280 M 185 180 A 45 45 0 1 1 185 130',
+    lowerPath: 'M 140 142 A 45 46 0 1 0 140 234 A 45 46 0 1 0 140 142 M 185 140 L 185 280',
     upperSteps: [
       { x: 140, y: 60, label: '1' },
       { x: 140, y: 230, label: '2' },
       { x: 195, y: 220, label: '3' },
     ],
+    lowerSteps: [
+      { x: 140, y: 142, label: '1' },
+      { x: 185, y: 140, label: '2' },
+    ],
     hint: 'Círculo redondo con una patita cruzada.',
+    lowerHint: 'Bolita redonda a la izquierda y palito largo bajando.',
   },
   {
     letter: 'R',
@@ -424,14 +519,19 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-media',
     color: '#006591',
     upperPath: 'M 75 240 L 75 60 L 155 60 Q 200 60 200 115 Q 200 160 150 160 L 75 160 M 145 160 L 210 240',
-    lowerPath: 'M 90 120 L 90 240 M 90 155 Q 130 120 160 125',
+    lowerPath: 'M 95 142 L 95 236 M 95 170 Q 135 142 170 150',
     upperSteps: [
       { x: 75, y: 60, label: '1' },
       { x: 190, y: 110, label: '2' },
       { x: 145, y: 160, label: '3' },
       { x: 210, y: 240, label: '4' },
     ],
+    lowerSteps: [
+      { x: 95, y: 142, label: '1' },
+      { x: 95, y: 170, label: '2' },
+    ],
     hint: 'Palito abajo, cabecita redonda y estira la patita.',
+    lowerHint: 'Palito corto y saca una ramita curva arriba.',
   },
   {
     letter: 'S',
@@ -446,14 +546,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-inicial',
     color: '#006c49',
     upperPath: 'M 205 95 Q 140 45 90 90 Q 55 125 105 150 Q 170 175 180 205 Q 190 245 120 245 Q 65 245 55 205',
-    lowerPath: 'M 175 135 Q 130 105 100 135 Q 75 155 110 175 Q 160 190 165 215 Q 170 245 115 245 Q 75 245 70 220',
+    lowerPath: 'M 175 148 Q 135 125 105 148 Q 80 168 115 188 Q 165 200 170 220 Q 170 240 120 240 Q 80 240 75 220',
     upperSteps: [
       { x: 205, y: 95, label: '1' },
       { x: 90, y: 90, label: '2' },
       { x: 140, y: 155, label: '3' },
       { x: 120, y: 245, label: '4' },
     ],
+    lowerSteps: [
+      { x: 175, y: 148, label: '1' },
+    ],
     hint: 'Como una serpiente haciendo curvas suaves.',
+    lowerHint: 'Serpentina pequeña ondeando suavemente.',
   },
   {
     letter: 'T',
@@ -468,13 +572,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-media',
     color: '#855300',
     upperPath: 'M 140 60 L 140 240 M 60 60 L 220 60',
-    lowerPath: 'M 140 60 L 140 220 Q 140 240 165 240 M 100 120 L 180 120',
+    lowerPath: 'M 140 75 L 140 220 Q 140 236 165 236 M 100 140 L 180 140',
     upperSteps: [
       { x: 60, y: 60, label: '1' },
       { x: 220, y: 60, label: '2' },
       { x: 140, y: 240, label: '3' },
     ],
+    lowerSteps: [
+      { x: 140, y: 75, label: '1' },
+      { x: 100, y: 140, label: '2' },
+    ],
     hint: 'Techo plano arriba y columna recta al suelo.',
+    lowerHint: 'Columna con colita abajo y cruza los bracitos.',
   },
   {
     letter: 'U',
@@ -489,14 +598,19 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'vocal',
     color: '#f59e0b',
     upperPath: 'M 75 60 L 75 170 Q 75 240 140 240 Q 205 240 205 170 L 205 60',
-    lowerPath: 'M 85 120 L 85 200 Q 85 240 135 240 Q 185 240 185 200 L 185 120 M 185 190 L 185 240',
+    lowerPath: 'M 95 142 L 95 210 Q 95 236 140 236 Q 185 236 185 210 L 185 142 M 185 200 L 185 236',
     upperSteps: [
       { x: 75, y: 60, label: '1' },
       { x: 75, y: 180, label: '2' },
       { x: 140, y: 240, label: '3' },
       { x: 205, y: 60, label: '4' },
     ],
+    lowerSteps: [
+      { x: 95, y: 142, label: '1' },
+      { x: 185, y: 142, label: '2' },
+    ],
     hint: 'Baja como un tobogán y sube hasta arriba.',
+    lowerHint: 'Baja curvando en sonrisa y baja el palito de apoyo.',
   },
   {
     letter: 'V',
@@ -511,13 +625,18 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-media',
     color: '#006591',
     upperPath: 'M 60 60 L 140 240 L 220 60',
-    lowerPath: 'M 80 120 L 140 240 L 200 120',
+    lowerPath: 'M 85 142 L 140 236 L 195 142',
     upperSteps: [
       { x: 60, y: 60, label: '1' },
       { x: 140, y: 240, label: '2' },
       { x: 220, y: 60, label: '3' },
     ],
+    lowerSteps: [
+      { x: 85, y: 142, label: '1' },
+      { x: 140, y: 236, label: '2' },
+    ],
     hint: 'Baja en punta hacia el centro y vuelve a subir.',
+    lowerHint: 'Baja en resbaladilla al centro y sube en pico.',
   },
   {
     letter: 'W',
@@ -532,7 +651,7 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#f59e0b',
     upperPath: 'M 40 60 L 85 240 L 140 130 L 195 240 L 240 60',
-    lowerPath: 'M 60 120 L 95 240 L 140 160 L 185 240 L 220 120',
+    lowerPath: 'M 60 142 L 95 236 L 140 170 L 185 236 L 220 142',
     upperSteps: [
       { x: 40, y: 60, label: '1' },
       { x: 85, y: 240, label: '2' },
@@ -540,7 +659,14 @@ export const ALPHABET_DATA: LetterExercise[] = [
       { x: 195, y: 240, label: '4' },
       { x: 240, y: 60, label: '5' },
     ],
+    lowerSteps: [
+      { x: 60, y: 142, label: '1' },
+      { x: 95, y: 236, label: '2' },
+      { x: 140, y: 170, label: '3' },
+      { x: 185, y: 236, label: '4' },
+    ],
     hint: 'Dos letras V juntas de la mano.',
+    lowerHint: 'Dos pequeñas V gemelas agarradas de la mano.',
   },
   {
     letter: 'X',
@@ -555,14 +681,19 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#006c49',
     upperPath: 'M 65 60 L 215 240 M 215 60 L 65 240',
-    lowerPath: 'M 85 120 L 195 240 M 195 120 L 85 240',
+    lowerPath: 'M 90 142 L 190 236 M 190 142 L 90 236',
     upperSteps: [
       { x: 65, y: 60, label: '1' },
       { x: 215, y: 240, label: '2' },
       { x: 215, y: 60, label: '3' },
       { x: 65, y: 240, label: '4' },
     ],
+    lowerSteps: [
+      { x: 90, y: 142, label: '1' },
+      { x: 190, y: 142, label: '2' },
+    ],
     hint: 'Dos líneas que se cruzan en un abrazo.',
+    lowerHint: 'Cruza dos palitos en diagonal formando una cruz.',
   },
   {
     letter: 'Y',
@@ -577,14 +708,20 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#006591',
     upperPath: 'M 65 60 L 140 155 L 215 60 M 140 155 L 140 240',
-    lowerPath: 'M 90 120 L 140 210 L 190 120 M 140 210 L 100 280',
+    lowerPath: 'M 95 142 L 140 215 L 185 142 M 140 215 L 105 280',
     upperSteps: [
       { x: 65, y: 60, label: '1' },
       { x: 140, y: 155, label: '2' },
       { x: 215, y: 60, label: '3' },
       { x: 140, y: 240, label: '4' },
     ],
+    lowerSteps: [
+      { x: 95, y: 142, label: '1' },
+      { x: 185, y: 142, label: '2' },
+      { x: 140, y: 215, label: '3' },
+    ],
     hint: 'Una pequeña V arriba con un pie para apoyarse.',
+    lowerHint: 'V pequeña arriba y colita larga inclinada abajo.',
   },
   {
     letter: 'Z',
@@ -599,13 +736,19 @@ export const ALPHABET_DATA: LetterExercise[] = [
     group: 'consonante-avanzada',
     color: '#855300',
     upperPath: 'M 70 60 L 210 60 L 70 240 L 210 240',
-    lowerPath: 'M 90 120 L 190 120 L 90 240 L 190 240',
+    lowerPath: 'M 95 142 L 185 142 L 95 236 L 185 236',
     upperSteps: [
       { x: 70, y: 60, label: '1' },
       { x: 210, y: 60, label: '2' },
       { x: 70, y: 240, label: '3' },
       { x: 210, y: 240, label: '4' },
     ],
+    lowerSteps: [
+      { x: 95, y: 142, label: '1' },
+      { x: 185, y: 142, label: '2' },
+      { x: 95, y: 236, label: '3' },
+    ],
     hint: 'Avanza a la derecha, resbala en diagonal y avanza otra vez.',
+    lowerHint: 'Raya derecha, resbaladilla y raya derecha al suelo.',
   },
 ];

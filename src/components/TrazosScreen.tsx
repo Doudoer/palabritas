@@ -554,23 +554,22 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
             />
 
             {/* Numbered Milestone Dots */}
-            {isUppercase &&
-              currentExercise.upperSteps.map((step, idx) => (
-                <g key={idx} transform={`translate(${step.x}, ${step.y})`} className="cursor-pointer">
-                  <circle cx="0" cy="0" r="14" fill="#f59e0b" stroke="#ffffff" strokeWidth="2" />
-                  <text
-                    x="0"
-                    y="5"
-                    fill="#ffffff"
-                    fontFamily="Quicksand"
-                    fontSize="13"
-                    fontWeight="700"
-                    textAnchor="middle"
-                  >
-                    {step.label}
-                  </text>
-                </g>
-              ))}
+            {(isUppercase ? currentExercise.upperSteps : (currentExercise.lowerSteps || []))?.map((step, idx) => (
+              <g key={idx} transform={`translate(${step.x}, ${step.y})`} className="cursor-pointer">
+                <circle cx="0" cy="0" r="14" fill="#f59e0b" stroke="#ffffff" strokeWidth="2" />
+                <text
+                  x="0"
+                  y="5"
+                  fill="#ffffff"
+                  fontFamily="Quicksand"
+                  fontSize="13"
+                  fontWeight="700"
+                  textAnchor="middle"
+                >
+                  {step.label}
+                </text>
+              </g>
+            ))}
           </svg>
 
           {/* Interactive HTML5 Drawing Canvas Overlaid */}

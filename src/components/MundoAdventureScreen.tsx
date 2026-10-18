@@ -641,7 +641,10 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
           <button
             onClick={() => {
               playPop(480);
-              speakSpanish(`${currentLetterExercise.name}... ${currentLetterExercise.phoneme}... ${currentLetterExercise.exampleWord}`);
+              const hintText = isUppercase
+                ? currentLetterExercise.hint
+                : (currentLetterExercise.lowerHint || currentLetterExercise.hint);
+              speakSpanish(`${currentLetterExercise.name} ${isUppercase ? 'mayúscula' : 'minúscula'}... ${currentLetterExercise.phoneme}... ${hintText}`);
             }}
             type="button"
             className="w-full max-w-[280px] h-11 bg-[#42bbff] hover:bg-[#89ceff] text-white rounded-full flex items-center justify-center gap-2 font-bold text-xs shadow-[0_3px_0_0_#006591] active:translate-y-0.5 cursor-pointer"
@@ -649,6 +652,13 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
             <span className="material-symbols-outlined text-[20px]">volume_up</span>
             <span>Escuchar: /{currentLetterExercise.phoneme}/ ({currentLetterExercise.exampleWord})</span>
           </button>
+
+          {/* Pedagogical Hint Pill */}
+          <div className="w-full max-w-[280px] px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-center shadow-2xs">
+            <p className="text-[11px] font-bold text-amber-900 leading-tight">
+              💡 {isUppercase ? currentLetterExercise.hint : (currentLetterExercise.lowerHint || currentLetterExercise.hint)}
+            </p>
+          </div>
 
           {/* Tracing Canvas Card */}
           <div className="w-full bg-white rounded-3xl p-3 shadow-[0_8px_0_0_#ffdbcc] border-2 border-[#ffdbcc] flex flex-col items-center relative">
@@ -682,24 +692,23 @@ export const MundoAdventureScreen: React.FC<MundoAdventureScreenProps> = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                {/* Numbered Guided Step Dots for uppercase */}
-                {isUppercase &&
-                  currentLetterExercise.upperSteps?.map((step, idx) => (
-                    <g key={idx}>
-                      <circle cx={step.x} cy={step.y} r="14" fill="#f59e0b" />
-                      <circle cx={step.x} cy={step.y} r="12" fill="#ffffff" />
-                      <text
-                        x={step.x}
-                        y={step.y + 4}
-                        textAnchor="middle"
-                        fill="#b45309"
-                        fontSize="12"
-                        fontWeight="900"
-                      >
-                        {step.label}
-                      </text>
-                    </g>
-                  ))}
+                {/* Numbered Guided Step Dots for uppercase and lowercase */}
+                {(isUppercase ? currentLetterExercise.upperSteps : (currentLetterExercise.lowerSteps || []))?.map((step, idx) => (
+                  <g key={idx}>
+                    <circle cx={step.x} cy={step.y} r="14" fill="#f59e0b" />
+                    <circle cx={step.x} cy={step.y} r="12" fill="#ffffff" />
+                    <text
+                      x={step.x}
+                      y={step.y + 4}
+                      textAnchor="middle"
+                      fill="#b45309"
+                      fontSize="12"
+                      fontWeight="900"
+                    >
+                      {step.label}
+                    </text>
+                  </g>
+                ))}
               </svg>
 
               {/* Drawing Canvas */}
