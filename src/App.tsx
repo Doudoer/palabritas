@@ -6,8 +6,7 @@
 import React, { useState } from 'react';
 import { ASSETS } from './data/appData';
 import { MundosScreen } from './components/MundosScreen';
-import { ConstruyeScreen } from './components/ConstruyeScreen';
-import { EscribeScreen } from './components/EscribeScreen';
+import { PalabrasScreen } from './components/PalabrasScreen';
 import { TrazosScreen } from './components/TrazosScreen';
 import { PremiosScreen } from './components/PremiosScreen';
 import { CuentosScreen } from './components/CuentosScreen';
@@ -19,20 +18,27 @@ import { InstallAppModal } from './components/InstallAppModal';
 import { WORLDS_DATA } from './data/worldsData';
 import confetti from 'canvas-confetti';
 import { playPop, playSparkleChime, playFanfare, speakSpanish, triggerHaptic } from './utils/audio';
+import {
+  loadPlayerProgress,
+  addPlayerStars,
+  completePlayerWorld,
+  PlayerProgress,
+} from './utils/playerProgress';
 
-type NavigationTab = 'mundos' | 'construye' | 'escribe' | 'trazos' | 'premios' | 'cuentos';
+export type NavigationTab = 'mundos' | 'trazos' | 'palabras' | 'cuentos' | 'premios';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('mundos');
-  const [starsCount, setStarsCount] = useState<number>(125);
+  const [palabrasSubTab, setPalabrasSubTab] = useState<'construye' | 'escribe'>('construye');
+
+  // Persistent Player Progress State
+  const [playerProgress, setPlayerProgress] = useState<PlayerProgress>(() => loadPlayerProgress());
+
+  // Current learning selections
   const [selectedLetter, setSelectedLetter] = useState<string>('A');
-  const [selectedLetterIndex, setSelectedLetterIndex] = useState<number>(0); // 'A'
+  const [selectedLetterIndex, setSelectedLetterIndex] = useState<number>(0);
   const [selectedWritingLetter, setSelectedWritingLetter] = useState<string>('A');
   const [letterFilter, setLetterFilter] = useState<'vocales' | 'primeras' | 'avanzadas' | 'todas'>('vocales');
-
-  // Progressive unlocking of worlds: Mundo 1 is completed by default, Mundo 2 is active, others locked
-  const [completedWorlds, setCompletedWorlds] = useState<number[]>([1]);
-  const [currentWorldId, setCurrentWorldId] = useState<number>(2);
 
   // Modals state
   const [isParentalGateOpen, setIsParentalGateOpen] = useState(false);
@@ -42,22 +48,20 @@ export default function App() {
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   const handleAddStars = (amount: number) => {
-    setStarsCount(prev => prev + amount);
+    const { newTotal } = addPlayerStars(amount);
+    setPlayerProgress(prev => ({ ...prev, starsCount: newTotal }));
     playSparkleChime();
   };
 
   const handleCompleteWorld = (worldId: number) => {
-    setCompletedWorlds(prev => {
-      if (prev.includes(worldId)) return prev;
-      const updated = [...prev, worldId].sort((a, b) => a - b);
-      return updated;
-    });
+    const result = completePlayerWorld(worldId);
+    setPlayerProgress(result.updatedProgress);
 
     const nextWorld = WORLDS_DATA.find(w => w.id === worldId + 1);
     playFanfare();
     confetti({
-      particleCount: 75,
-      spread: 75,
+      particleCount: 85,
+      spread: 80,
       origin: { y: 0.6 },
       colors: ['#6cf8bb', '#f59e0b', '#42bbff', '#ffd0bb'],
     });
@@ -81,14 +85,15 @@ export default function App() {
       setLetterFilter(filter);
     }
     if (typeof worldId === 'number') {
-      setCurrentWorldId(worldId);
+      setPlayerProgress(prev => ({ ...prev, currentWorldId: worldId }));
     }
     if (typeof letterIdx === 'number') {
       setSelectedLetterIndex(letterIdx);
     } else if (filter === 'vocales') {
       setSelectedLetterIndex(0);
     }
-    handleTabChange('construye');
+    setPalabrasSubTab('construye');
+    handleTabChange('palabras');
   };
 
   const handleOpenTracing = (letter?: string, filter?: 'vocales' | 'primeras' | 'avanzadas' | 'todas', worldId?: number) => {
@@ -98,7 +103,7 @@ export default function App() {
       setLetterFilter('vocales');
     }
     if (typeof worldId === 'number') {
-      setCurrentWorldId(worldId);
+      setPlayerProgress(prev => ({ ...prev, currentWorldId: worldId }));
     }
     if (letter) {
       setSelectedLetter(letter);
@@ -112,7 +117,8 @@ export default function App() {
     if (letter) {
       setSelectedWritingLetter(letter.toUpperCase());
     }
-    handleTabChange('escribe');
+    setPalabrasSubTab('escribe');
+    handleTabChange('palabras');
   };
 
   const handleChispitaHeaderClick = () => {
@@ -164,13 +170,13 @@ export default function App() {
             <div
               onClick={() => {
                 playSparkleChime();
-                speakSpanish(`Tienes ${starsCount} estrellitas doradas.`);
+                speakSpanish(`Tienes ${playerProgress.starsCount} estrellitas doradas.`);
               }}
               className="flex items-center gap-1.5 bg-[#ffe2d6] px-3 py-1.5 rounded-full shadow-[0_3px_0_0_#ffdbcc] active:translate-y-0.5 cursor-pointer border border-[#ffd0bb]"
             >
               <span className="material-symbols-outlined text-[#f59e0b] text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
               <span className="text-sm text-[#613b00] font-black">
-                {starsCount}
+                {playerProgress.starsCount}
               </span>
             </div>
 
@@ -213,27 +219,7 @@ export default function App() {
             onOpenWriting={handleOpenWriting}
             onOpenRewards={() => handleTabChange('premios')}
             onOpenPhonicsSession={() => setIsPhonicsSessionOpen(true)}
-            completedWorlds={completedWorlds}
-          />
-        )}
-
-        {activeTab === 'construye' && (
-          <ConstruyeScreen
-            onBackToMap={() => handleTabChange('mundos')}
-            onOpenCelebration={() => setIsCelebrationModalOpen(true)}
-            onAddStars={handleAddStars}
-            initialLetterIndex={selectedLetterIndex}
-            initialFilter={letterFilter}
-            currentWorldId={currentWorldId}
-            onCompleteWorld={handleCompleteWorld}
-          />
-        )}
-
-        {activeTab === 'escribe' && (
-          <EscribeScreen
-            onBackToMap={() => handleTabChange('mundos')}
-            onAddStars={handleAddStars}
-            initialLetter={selectedWritingLetter}
+            completedWorlds={playerProgress.completedWorlds}
           />
         )}
 
@@ -246,11 +232,17 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'premios' && (
-          <PremiosScreen
-            starsCount={starsCount}
+        {activeTab === 'palabras' && (
+          <PalabrasScreen
+            onBackToMap={() => handleTabChange('mundos')}
+            onOpenCelebration={() => setIsCelebrationModalOpen(true)}
             onAddStars={handleAddStars}
-            onOpenCelebrationModal={() => setIsCelebrationModalOpen(true)}
+            initialSubTab={palabrasSubTab}
+            initialLetterIndex={selectedLetterIndex}
+            initialWritingLetter={selectedWritingLetter}
+            initialFilter={letterFilter}
+            currentWorldId={playerProgress.currentWorldId}
+            onCompleteWorld={handleCompleteWorld}
           />
         )}
 
@@ -260,129 +252,132 @@ export default function App() {
             onAddStars={handleAddStars}
           />
         )}
+
+        {activeTab === 'premios' && (
+          <PremiosScreen
+            starsCount={playerProgress.starsCount}
+            onAddStars={handleAddStars}
+            onOpenCelebrationModal={() => setIsCelebrationModalOpen(true)}
+          />
+        )}
       </main>
 
-      {/* Fixed Bottom Navigation Dock */}
+      {/* Fixed Bottom Navigation Dock (5 Kid-Friendly Tactile Tabs) */}
       <nav className="fixed bottom-0 w-full z-40 pb-safe bg-[#fff1eb]/95 backdrop-blur-xl shadow-[0_-4px_20px_rgba(133,83,0,0.08)] border-t border-[#ffd0bb]/60">
-        <div className="h-20 max-w-xl mx-auto px-1 flex items-center justify-around">
-          {/* Mundos */}
+        <div className="h-20 max-w-xl mx-auto px-2 flex items-center justify-around">
+          {/* 1. Mundos */}
           <button
             onClick={() => handleTabChange('mundos')}
             aria-current={activeTab === 'mundos' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[48px] min-h-[50px] transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
               activeTab === 'mundos'
-                ? 'text-[#f59e0b] font-bold scale-105'
-                : 'text-[#534434] hover:text-[#351000]'
+                ? 'text-[#451a03] font-black scale-105 bg-amber-100/70 border border-amber-300 shadow-[0_3px_0_0_#d97706]'
+                : 'text-[#613b00] hover:text-[#351000]'
             }`}
             type="button"
           >
             <span
-              className="material-symbols-outlined text-[24px]"
-              style={{ fontVariationSettings: activeTab === 'mundos' ? "'FILL' 1" : "'FILL' 0" }}
+              className="material-symbols-outlined text-[26px]"
+              style={{
+                color: activeTab === 'mundos' ? '#d97706' : undefined,
+                fontVariationSettings: activeTab === 'mundos' ? "'FILL' 1" : "'FILL' 0",
+              }}
             >
               explore
             </span>
-            <span className="text-[11px] mt-0.5 font-bold">Mundos</span>
+            <span className="text-[11px] font-black">Mundos</span>
           </button>
 
-          {/* Construye */}
-          <button
-            onClick={() => handleTabChange('construye')}
-            aria-current={activeTab === 'construye' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[48px] min-h-[50px] transition-all cursor-pointer ${
-              activeTab === 'construye'
-                ? 'text-[#f59e0b] font-bold scale-105'
-                : 'text-[#534434] hover:text-[#351000]'
-            }`}
-            type="button"
-          >
-            <span
-              className="material-symbols-outlined text-[24px]"
-              style={{ fontVariationSettings: activeTab === 'construye' ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              extension
-            </span>
-            <span className="text-[11px] mt-0.5 font-bold">Construye</span>
-          </button>
-
-          {/* Escribe (NUEVO MÓDULO) */}
-          <button
-            onClick={() => handleTabChange('escribe')}
-            aria-current={activeTab === 'escribe' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[48px] min-h-[50px] transition-all cursor-pointer ${
-              activeTab === 'escribe'
-                ? 'text-[#f59e0b] font-bold scale-105'
-                : 'text-[#534434] hover:text-[#351000]'
-            }`}
-            type="button"
-          >
-            <span
-              className="material-symbols-outlined text-[24px]"
-              style={{ fontVariationSettings: activeTab === 'escribe' ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              edit_note
-            </span>
-            <span className="text-[11px] mt-0.5 font-bold">Escribe</span>
-          </button>
-
-          {/* Trazos */}
+          {/* 2. Trazos */}
           <button
             onClick={() => handleTabChange('trazos')}
             aria-current={activeTab === 'trazos' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[48px] min-h-[50px] transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
               activeTab === 'trazos'
-                ? 'text-[#f59e0b] font-bold scale-105'
-                : 'text-[#534434] hover:text-[#351000]'
+                ? 'text-[#064e3b] font-black scale-105 bg-emerald-100/70 border border-emerald-300 shadow-[0_3px_0_0_#059669]'
+                : 'text-[#613b00] hover:text-[#351000]'
             }`}
             type="button"
           >
             <span
-              className="material-symbols-outlined text-[24px]"
-              style={{ fontVariationSettings: activeTab === 'trazos' ? "'FILL' 1" : "'FILL' 0" }}
+              className="material-symbols-outlined text-[26px]"
+              style={{
+                color: activeTab === 'trazos' ? '#059669' : undefined,
+                fontVariationSettings: activeTab === 'trazos' ? "'FILL' 1" : "'FILL' 0",
+              }}
             >
               draw
             </span>
-            <span className="text-[11px] mt-0.5 font-bold">Trazos</span>
+            <span className="text-[11px] font-black">Trazos</span>
           </button>
 
-          {/* Cuentos */}
+          {/* 3. Palabras (Construye & Escribe) */}
+          <button
+            onClick={() => handleTabChange('palabras')}
+            aria-current={activeTab === 'palabras' ? 'page' : undefined}
+            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
+              activeTab === 'palabras'
+                ? 'text-[#0369a1] font-black scale-105 bg-sky-100/70 border border-sky-300 shadow-[0_3px_0_0_#0284c7]'
+                : 'text-[#613b00] hover:text-[#351000]'
+            }`}
+            type="button"
+          >
+            <span
+              className="material-symbols-outlined text-[26px]"
+              style={{
+                color: activeTab === 'palabras' ? '#0284c7' : undefined,
+                fontVariationSettings: activeTab === 'palabras' ? "'FILL' 1" : "'FILL' 0",
+              }}
+            >
+              extension
+            </span>
+            <span className="text-[11px] font-black">Palabras</span>
+          </button>
+
+          {/* 4. Cuentos */}
           <button
             onClick={() => handleTabChange('cuentos')}
             aria-current={activeTab === 'cuentos' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[48px] min-h-[50px] transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
               activeTab === 'cuentos'
-                ? 'text-[#f59e0b] font-bold scale-105'
-                : 'text-[#534434] hover:text-[#351000]'
+                ? 'text-[#7e22ce] font-black scale-105 bg-purple-100/70 border border-purple-300 shadow-[0_3px_0_0_#7c3aed]'
+                : 'text-[#613b00] hover:text-[#351000]'
             }`}
             type="button"
           >
             <span
-              className="material-symbols-outlined text-[24px]"
-              style={{ fontVariationSettings: activeTab === 'cuentos' ? "'FILL' 1" : "'FILL' 0" }}
+              className="material-symbols-outlined text-[26px]"
+              style={{
+                color: activeTab === 'cuentos' ? '#7c3aed' : undefined,
+                fontVariationSettings: activeTab === 'cuentos' ? "'FILL' 1" : "'FILL' 0",
+              }}
             >
               auto_stories
             </span>
-            <span className="text-[11px] mt-0.5 font-bold">Cuentos</span>
+            <span className="text-[11px] font-black">Cuentos</span>
           </button>
 
-          {/* Premios */}
+          {/* 5. Premios */}
           <button
             onClick={() => handleTabChange('premios')}
             aria-current={activeTab === 'premios' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[48px] min-h-[50px] transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
               activeTab === 'premios'
-                ? 'text-[#f59e0b] font-bold scale-105'
-                : 'text-[#534434] hover:text-[#351000]'
+                ? 'text-[#c2410c] font-black scale-105 bg-orange-100/70 border border-orange-300 shadow-[0_3px_0_0_#ea580c]'
+                : 'text-[#613b00] hover:text-[#351000]'
             }`}
             type="button"
           >
             <span
-              className="material-symbols-outlined text-[24px]"
-              style={{ fontVariationSettings: activeTab === 'premios' ? "'FILL' 1" : "'FILL' 0" }}
+              className="material-symbols-outlined text-[26px]"
+              style={{
+                color: activeTab === 'premios' ? '#ea580c' : undefined,
+                fontVariationSettings: activeTab === 'premios' ? "'FILL' 1" : "'FILL' 0",
+              }}
             >
               featured_seasonal_and_gifts
             </span>
-            <span className="text-[11px] mt-0.5 font-bold">Premios</span>
+            <span className="text-[11px] font-black">Premios</span>
           </button>
         </div>
       </nav>

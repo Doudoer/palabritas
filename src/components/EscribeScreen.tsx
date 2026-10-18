@@ -16,6 +16,7 @@ import {
   triggerHaptic,
 } from '../utils/audio';
 import { validateWordCalligraphy, CalligraphyValidationResult } from '../utils/calligraphyValidator';
+import { markWordLearned } from '../utils/playerProgress';
 
 interface EscribeScreenProps {
   onBackToMap: () => void;
@@ -85,6 +86,7 @@ export const EscribeScreen: React.FC<EscribeScreenProps> = ({
   // Track completed words count
   const saveLearnedWord = (wordId: string) => {
     setLearnedWords(prev => {
+      markWordLearned(wordId);
       if (prev.includes(wordId)) return prev;
       const updated = [...prev, wordId];
       try {

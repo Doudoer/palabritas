@@ -18,6 +18,7 @@ import {
 } from '../utils/dailyTracker';
 import { playPop, playFanfare, playWiggleError, speakSpanish, triggerHaptic, playSparkleChime } from '../utils/audio';
 import { validateLetterDrawing, CalligraphyValidationResult } from '../utils/calligraphyValidator';
+import { markWordLearned } from '../utils/playerProgress';
 
 interface ConstruyeScreenProps {
   onBackToMap: () => void;
@@ -206,6 +207,7 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
     if (onCompleteWorld) {
       onCompleteWorld(currentWorld.id);
     }
+    markWordLearned(currentExercise.exampleWord);
 
     const nextWorld = WORLDS_DATA.find(w => w.id === currentWorld.id + 1);
     if (nextWorld) {

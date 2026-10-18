@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { ASSETS } from '../data/appData';
 import { WORLDS_DATA, WorldLevel } from '../data/worldsData';
-import { getCurrentDayTheme, WEEKLY_DAY_THEMES } from '../data/exercisesData';
+import { getCurrentDayTheme } from '../data/exercisesData';
 import {
   loadDailyProgress,
   resetTodayProgressManually,
@@ -33,6 +33,7 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
 }) => {
   const [selectedWorldFilter, setSelectedWorldFilter] = useState<'todos' | 'A-F' | 'G-M' | 'N-S' | 'T-Z' | 'especiales'>('todos');
   const [dailyProgress, setDailyProgress] = useState<DailyProgressState>(() => loadDailyProgress());
+  const [selectedModalWorld, setSelectedModalWorld] = useState<WorldLevel | null>(null);
   const worldRefs = useRef<Record<number, HTMLElement | null>>({});
 
   // Reload daily state on mount
@@ -41,8 +42,9 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
   }, []);
 
   const totalWorldsCount = WORLDS_DATA.length;
-  // Determine highest unlocked world (always previous world + 1)
+  // Determine highest unlocked world (always highest completed world + 1)
   const maxUnlockedWorldId = Math.min(totalWorldsCount, Math.max(1, ...completedWorlds) + 1);
+  const activeWorldObj = WORLDS_DATA.find(w => w.id === maxUnlockedWorldId) || WORLDS_DATA[0];
 
   const todayTheme = getCurrentDayTheme();
 
@@ -58,13 +60,24 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
   const handleLockedWorldClick = (world: WorldLevel) => {
     playWiggleError();
     triggerHaptic([40, 40, 40]);
-    speakSpanish(`¡El ${world.numberLabel} (${world.title}) está bloqueado! Debes completar primero el Mundo ${world.id - 1} para abrirlo.`);
+    speakSpanish(`¡El ${world.numberLabel} (${world.title}) está bloqueado! Completa primero el Mundo ${world.id - 1} para abrirlo.`);
+  };
+
+  const handleOpenWorldModal = (world: WorldLevel) => {
+    if (world.id > maxUnlockedWorldId) {
+      handleLockedWorldClick(world);
+      return;
+    }
+    playPop(520);
+    triggerHaptic(20);
+    setSelectedModalWorld(world);
+    speakSpanish(`¡${world.numberLabel}: ${world.title}! Elige tu actividad.`);
   };
 
   const handleChispitaClick = () => {
     playPop(520);
     triggerHaptic(20);
-    speakSpanish(`¡Hola pequeña lectora! Hoy es ${getSpanishFormattedDate()}. Reto de hoy: ${todayTheme.title}. ¡Has conquistado ${completedWorlds.length} de ${totalWorldsCount} mundos con todas las familias de letras!`);
+    speakSpanish(`¡Hola pequeña lectora! Hoy es ${getSpanishFormattedDate()}. Reto de hoy: ${todayTheme.title}. ¡Has conquistado ${completedWorlds.length} de ${totalWorldsCount} mundos!`);
   };
 
   const handleResetDaily = () => {
@@ -102,8 +115,6 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
     return acc;
   }, 0);
   const totalMaxStars = WORLDS_DATA.reduce((acc, curr) => acc + curr.maxStars, 0);
-
-  const activeWorldObj = WORLDS_DATA.find(w => w.id === maxUnlockedWorldId) || WORLDS_DATA[0];
 
   return (
     <div className="flex flex-col w-full relative pb-10 select-none">
@@ -157,37 +168,34 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
             </div>
           </div>
 
-          {/* New Word Writing Feature Banner */}
-          {onOpenWriting && (
-            <div
-              onClick={() => onOpenWriting('A')}
-              className="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 p-3 rounded-2xl shadow-[0_4px_0_0_#d97706] text-white flex items-center justify-between gap-3 cursor-pointer hover:brightness-105 active:translate-y-0.5 transition-all"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
-                  ✍️
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] uppercase font-black tracking-wider block text-white/90">
-                    ¡Nuevo Módulo Especial!
-                  </span>
-                  <span className="text-sm font-black block truncate leading-tight">
-                    Aprende a Escribir Palabras (A - Z)
-                  </span>
-                  <span className="text-[11px] font-bold text-white/90">
-                    Teclado fonético, pizarra de caligrafía y dictado mágico
-                  </span>
-                </div>
+          {/* HERO CARD: "¡Continuar Mi Aventura!" (Immediate 1-tap jump) */}
+          <div className="bg-gradient-to-r from-[#f59e0b] via-[#fbbf24] to-[#f59e0b] p-3.5 sm:p-4 rounded-2xl shadow-[0_5px_0_0_#b45309] text-[#451a03] flex flex-col sm:flex-row items-center justify-between gap-3 border border-amber-300">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="w-14 h-14 rounded-2xl bg-white/30 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner shrink-0 animate-bounce">
+                {activeWorldObj.targetEmoji}
               </div>
-              <button
-                type="button"
-                className="bg-white text-[#d97706] text-xs font-black px-3.5 py-2 rounded-xl shadow-xs shrink-0 flex items-center gap-1 hover:bg-amber-50 cursor-pointer"
-              >
-                <span>Escribir</span>
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-              </button>
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-950/80 block">
+                  🚀 Tu Próxima Misión Mágica
+                </span>
+                <span className="text-base sm:text-lg font-black leading-tight block truncate text-[#351000]">
+                  {activeWorldObj.numberLabel}: {activeWorldObj.title}
+                </span>
+                <span className="text-xs font-bold text-amber-950/90 block">
+                  Letra <strong className="text-white underline">{activeWorldObj.focusLetter}</strong> • Palabra: <strong>{activeWorldObj.targetWord}</strong>
+                </span>
+              </div>
             </div>
-          )}
+
+            <button
+              onClick={() => handleOpenWorldModal(activeWorldObj)}
+              type="button"
+              className="w-full sm:w-auto bg-[#351000] hover:bg-[#561f00] text-amber-300 font-black text-sm px-5 py-3 rounded-2xl shadow-[0_4px_0_0_#000] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            >
+              <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+              <span>¡CONTINUAR MUNDO {activeWorldObj.id}!</span>
+            </button>
+          </div>
 
           {/* Daily Date & Weekly Theme Banner */}
           <div className="bg-gradient-to-r from-amber-50 via-white to-orange-50 p-3 rounded-2xl border border-[#ffd0bb] flex flex-col sm:flex-row items-center justify-between gap-2">
@@ -377,7 +385,8 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
                   {/* Title & Target Word Info */}
                   <div className="flex items-start gap-4">
                     <div
-                      className={`w-16 h-16 rounded-2xl ${world.colorTheme.iconBg} flex items-center justify-center text-3xl shadow-inner shrink-0 border border-black/5 relative`}
+                      onClick={() => handleOpenWorldModal(world)}
+                      className={`w-16 h-16 rounded-2xl ${world.colorTheme.iconBg} flex items-center justify-center text-3xl shadow-inner shrink-0 border border-black/5 relative cursor-pointer active:scale-95 transition-transform`}
                     >
                       {world.targetEmoji}
                       {isLocked && (
@@ -393,7 +402,10 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
                         <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span>
                         <span className="text-xs font-bold text-[#00714d]">{world.focusLetter}</span>
                       </div>
-                      <h2 className="text-xl text-[#351000] font-black leading-tight truncate">
+                      <h2
+                        onClick={() => handleOpenWorldModal(world)}
+                        className="text-xl text-[#351000] font-black leading-tight truncate cursor-pointer hover:underline"
+                      >
                         {world.title}
                       </h2>
                       <p className="text-xs text-[#534434] font-bold mt-0.5">
@@ -474,24 +486,16 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
                         )}
                       </div>
 
-                      {/* Interactive Play, Trace & Write Action Buttons */}
+                      {/* Interactive Step Explorer & Fast Play Buttons */}
                       <div className="flex items-center gap-1.5 w-full sm:w-auto flex-wrap">
-                        {onOpenWriting && (
-                          <button
-                            onClick={() => {
-                              playPop(460);
-                              triggerHaptic(15);
-                              speakSpanish(`Escribiendo palabras con la letra ${world.focusLetter}.`);
-                              onOpenWriting(world.focusLetter);
-                            }}
-                            className="flex-1 sm:flex-initial bg-[#fff1eb] hover:bg-[#ffe2d6] text-[#855300] text-xs font-bold px-3 py-2.5 rounded-full shadow-[0_3px_0_0_#ffd0bb] active:translate-y-0.5 flex items-center justify-center gap-1 cursor-pointer border border-[#ffd0bb] transition-colors"
-                            type="button"
-                            title="Escribir palabras con esta letra"
-                          >
-                            <span>✍️</span>
-                            <span>Escribir</span>
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleOpenWorldModal(world)}
+                          type="button"
+                          className="flex-1 sm:flex-initial bg-[#ffe2d6] hover:bg-[#ffd0bb] text-[#855300] text-xs font-bold px-3 py-2 rounded-full border border-[#ffd0bb] shadow-2xs cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">list_alt</span>
+                          <span>Pasos</span>
+                        </button>
 
                         <button
                           onClick={() => {
@@ -500,10 +504,10 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
                             speakSpanish(`Trazando letras de ${world.numberLabel}: ${world.focusLetter}.`);
                             onOpenTracing(world.focusLetter, world.categoryFilter, world.id);
                           }}
-                          className="flex-1 sm:flex-initial bg-[#6cf8bb] hover:bg-[#4edea3] text-[#00714d] text-xs font-bold px-3 py-2.5 rounded-full shadow-[0_3px_0_0_#4edea3] active:translate-y-0.5 flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                          className="flex-1 sm:flex-initial bg-[#6cf8bb] hover:bg-[#4edea3] text-[#00714d] text-xs font-bold px-3 py-2 rounded-full shadow-[0_2px_0_0_#4edea3] active:translate-y-0.5 flex items-center justify-center gap-1 cursor-pointer transition-colors"
                           type="button"
                         >
-                          <span className="material-symbols-outlined text-[17px]">draw</span>
+                          <span className="material-symbols-outlined text-[16px]">draw</span>
                           <span>Trazar</span>
                         </button>
 
@@ -517,20 +521,18 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
                             }
                             onStartWordGame(world.letterIndex, world.categoryFilter, world.id);
                           }}
-                          className={`flex-1 sm:flex-initial text-xs font-bold px-3.5 py-2.5 rounded-full shadow-[0_3px_0_0_#d97706] active:translate-y-0.5 flex items-center justify-center gap-1 cursor-pointer transition-colors ${
+                          className={`flex-1 sm:flex-initial text-xs font-black px-3.5 py-2 rounded-full shadow-[0_3px_0_0_#d97706] active:translate-y-0.5 flex items-center justify-center gap-1 cursor-pointer transition-colors ${
                             isCurrentActive
-                              ? 'bg-[#f59e0b] hover:bg-amber-500 text-[#613b00]'
-                              : 'bg-[#ffe2d6] hover:bg-[#ffd0bb] text-[#855300] shadow-[0_3px_0_0_#ffd0bb]'
+                              ? 'bg-[#f59e0b] hover:bg-amber-500 text-[#451a03]'
+                              : 'bg-[#fff1eb] hover:bg-[#ffe2d6] text-[#855300] shadow-[0_2px_0_0_#ffd0bb]'
                           }`}
                           type="button"
                         >
-                          <span className="material-symbols-outlined text-[17px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                          <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                             play_arrow
                           </span>
                           <span>
-                            {completedToday
-                              ? `Repasar (${world.targetWord})`
-                              : `Reto (${world.targetWord})`}
+                            {isCompleted ? 'Repasar' : '¡JUGAR!'}
                           </span>
                         </button>
                       </div>
@@ -564,6 +566,164 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
           );
         })}
       </div>
+
+      {/* WORLD STEP DETAIL MODAL (The 4 Pedagogical Steps for Kids) */}
+      {selectedModalWorld && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#fff8f6] w-full max-w-md rounded-3xl p-5 shadow-2xl border-4 border-[#ffd0bb] flex flex-col gap-4 relative animate-pop-bounce">
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedModalWorld(null)}
+              type="button"
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#ffe2d6] text-[#855300] font-black flex items-center justify-center hover:bg-[#ffd0bb] cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {/* Modal Header */}
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center text-3xl shadow-inner border border-amber-300">
+                {selectedModalWorld.targetEmoji}
+              </div>
+              <div className="min-w-0 flex-1 pr-6">
+                <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider block">
+                  {selectedModalWorld.numberLabel} • Familia de Letras
+                </span>
+                <h3 className="text-xl font-black text-[#351000] leading-tight">
+                  {selectedModalWorld.title}
+                </h3>
+                <p className="text-xs font-bold text-emerald-700">
+                  Palabra Mágica: <strong>{selectedModalWorld.targetWord}</strong>
+                </p>
+              </div>
+            </div>
+
+            {/* The 4 Learning Steps for this world */}
+            <div className="flex flex-col gap-2 pt-1">
+              <span className="text-xs font-black text-[#855300] uppercase tracking-wide">
+                Elige qué paso aprender hoy:
+              </span>
+
+              {/* Paso 1: Fonema y Sonido */}
+              <button
+                onClick={() => {
+                  playPop(500);
+                  triggerHaptic(20);
+                  speakSpanish(`Paso 1. Fonema de la letra ${selectedModalWorld.focusLetter}. Sonido: ${selectedModalWorld.focusLetter}... Ejemplo: ${selectedModalWorld.targetWord}.`);
+                }}
+                type="button"
+                className="p-3 bg-white hover:bg-amber-50 rounded-2xl border-2 border-amber-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 font-black flex items-center justify-center text-lg">
+                    👂
+                  </span>
+                  <div>
+                    <span className="text-xs font-black text-[#351000] block">
+                      1. Fonema y Sonido
+                    </span>
+                    <span className="text-[11px] text-[#78350f] font-bold">
+                      Escucha cómo suena la letra {selectedModalWorld.focusLetter}
+                    </span>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-amber-600">volume_up</span>
+              </button>
+
+              {/* Paso 2: Trazo Guiado en Pizarra */}
+              <button
+                onClick={() => {
+                  setSelectedModalWorld(null);
+                  onOpenTracing(selectedModalWorld.focusLetter, selectedModalWorld.categoryFilter, selectedModalWorld.id);
+                }}
+                type="button"
+                className="p-3 bg-white hover:bg-emerald-50 rounded-2xl border-2 border-emerald-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 font-black flex items-center justify-center text-lg">
+                    ✍️
+                  </span>
+                  <div>
+                    <span className="text-xs font-black text-[#351000] block">
+                      2. Trazo en la Pizarra
+                    </span>
+                    <span className="text-[11px] text-emerald-800 font-bold">
+                      Dibuja la letra con tiza mágica
+                    </span>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-emerald-600">arrow_forward</span>
+              </button>
+
+              {/* Paso 3: Construye y Arma Sílabas */}
+              <button
+                onClick={() => {
+                  setSelectedModalWorld(null);
+                  onStartWordGame(selectedModalWorld.letterIndex, selectedModalWorld.categoryFilter, selectedModalWorld.id);
+                }}
+                type="button"
+                className="p-3 bg-white hover:bg-sky-50 rounded-2xl border-2 border-sky-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 font-black flex items-center justify-center text-lg">
+                    🧩
+                  </span>
+                  <div>
+                    <span className="text-xs font-black text-[#351000] block">
+                      3. Arma con Sílabas
+                    </span>
+                    <span className="text-[11px] text-sky-800 font-bold">
+                      Forma la palabra {selectedModalWorld.targetWord}
+                    </span>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-sky-600">arrow_forward</span>
+              </button>
+
+              {/* Paso 4: Escribe con Teclado */}
+              {onOpenWriting && (
+                <button
+                  onClick={() => {
+                    setSelectedModalWorld(null);
+                    onOpenWriting(selectedModalWorld.focusLetter);
+                  }}
+                  type="button"
+                  className="p-3 bg-white hover:bg-purple-50 rounded-2xl border-2 border-purple-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 font-black flex items-center justify-center text-lg">
+                      ⌨️
+                    </span>
+                    <div>
+                      <span className="text-xs font-black text-[#351000] block">
+                        4. Escribe con Teclado
+                      </span>
+                      <span className="text-[11px] text-purple-800 font-bold">
+                        Teclado fonético y dictado
+                      </span>
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined text-purple-600">arrow_forward</span>
+                </button>
+              )}
+            </div>
+
+            {/* Quick Play All Button */}
+            <button
+              onClick={() => {
+                const w = selectedModalWorld;
+                setSelectedModalWorld(null);
+                onStartWordGame(w.letterIndex, w.categoryFilter, w.id);
+              }}
+              type="button"
+              className="w-full py-3 bg-[#f59e0b] hover:bg-amber-500 text-[#451a03] font-black rounded-2xl shadow-[0_4px_0_0_#b45309] active:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer mt-1"
+            >
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+              <span>¡JUGAR AVENTURA DE {selectedModalWorld.targetWord.toUpperCase()}!</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

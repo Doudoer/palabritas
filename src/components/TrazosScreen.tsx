@@ -4,6 +4,7 @@ import { ALPHABET_DATA, LetterExercise } from '../data/alphabetData';
 import { playPop, playSparkleChime, playFanfare, playWiggleError, speakSpanish, triggerHaptic } from '../utils/audio';
 import { ASSETS } from '../data/appData';
 import { validateLetterDrawing, CalligraphyValidationResult } from '../utils/calligraphyValidator';
+import { markLetterMastered } from '../utils/playerProgress';
 
 interface TrazosScreenProps {
   onBackToMap: () => void;
@@ -191,6 +192,7 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
 
     const starsEarned = result.stars === 3 ? 15 : result.stars === 2 ? 10 : 5;
     onAddStars(starsEarned);
+    markLetterMastered(currentExercise.letter);
     speakSpanish(result.message);
 
     confetti({

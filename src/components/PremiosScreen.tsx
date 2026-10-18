@@ -13,6 +13,7 @@ import {
   isHapticsEnabled,
   setHaptics,
 } from '../utils/audio';
+import { claimPlayerSticker } from '../utils/playerProgress';
 
 interface PremiosScreenProps {
   starsCount: number;
@@ -174,6 +175,9 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
     speakSpanish(`¡Descubriste el ${currentMystery.title}! ¡Más 50 estrellas!`);
     showToast(`¡${currentMystery.title} pegado con éxito! ⭐ +50 Estrellas`);
 
+    const scratchId = `scratch-${Date.now()}`;
+    claimPlayerSticker(scratchId);
+
     // Add to album page
     setAlbumStickers(prev => [
       ...prev,
@@ -210,6 +214,7 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
     setPendingStickers(prev =>
       prev.map(s => (s.id === stickerId ? { ...s, stuck: true } : s))
     );
+    claimPlayerSticker(stickerId);
 
     const stuckSticker = pendingStickers.find(s => s.id === stickerId);
     if (stuckSticker) {
