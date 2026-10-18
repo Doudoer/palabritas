@@ -39,6 +39,8 @@ fun WebViewScreen(modifier: Modifier = Modifier) {
             WebView(context).apply {
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
+                settings.cacheMode = WebSettings.LOAD_NO_CACHE
+                clearCache(true)
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 webViewClient = WebViewClient()
                 loadUrl("http://167.235.21.59")

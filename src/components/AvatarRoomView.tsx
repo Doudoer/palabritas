@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import confetti from 'canvas-confetti';
 import {
   AVATAR_ROOM_CATALOG,
@@ -1384,7 +1385,7 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
       {/* ========================================================
           THE CUSTOMIZATION DRAWER (ARMARIO MÁGICO)
          ======================================================== */}
-      {isDrawerOpen && (
+      {isDrawerOpen && typeof document !== 'undefined' && createPortal(
         <div
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -1392,14 +1393,13 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
               setIsDrawerOpen(false);
             }
           }}
-          className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 select-none"
+          className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 select-none overflow-y-auto"
         >
           <div
-            style={{ animation: 'modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
-            className="w-full max-w-lg max-h-[88vh] bg-[#fff8f6] rounded-3xl border-4 border-[#ffddb8] shadow-2xl flex flex-col overflow-hidden relative"
+            className="w-full max-w-lg h-[86vh] sm:h-[84vh] min-h-[460px] max-h-[780px] bg-[#fff8f6] rounded-3xl border-4 border-[#ffddb8] shadow-2xl flex flex-col overflow-hidden relative my-auto animate-scale-in"
           >
             {/* Drawer Header */}
-            <div className="p-3.5 bg-gradient-to-r from-pink-100 via-amber-100 to-pink-100 border-b border-[#ffd0bb] flex items-center justify-between">
+            <div className="shrink-0 p-3.5 bg-gradient-to-r from-pink-100 via-amber-100 to-pink-100 border-b border-[#ffd0bb] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">✨</span>
                 <div>
@@ -1427,7 +1427,7 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
             </div>
 
             {/* Main Category Tabs: "Mi Niña" vs "Mi Habitación" */}
-            <div className="flex p-2 bg-[#ffeae1] border-b border-[#ffd0bb] gap-2">
+            <div className="shrink-0 flex p-2 bg-[#ffeae1] border-b border-[#ffd0bb] gap-2">
               <button
                 onClick={() => {
                   playPop(440);
@@ -1462,7 +1462,7 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
             </div>
 
             {/* Sub-Category Chips */}
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-white/60 overflow-x-auto border-b border-[#ffd0bb]/60 no-scrollbar">
+            <div className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white/60 overflow-x-auto border-b border-[#ffd0bb]/60 no-scrollbar">
               {mainDrawerTab === 'habitacion' ? (
                 <>
                   <button
@@ -1627,7 +1627,7 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
             </div>
 
             {/* Drawer Body: Grid of Items or Palette Selectors */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
               {/* Special Palette Sub-Tabs: Hair Style Selector */}
               {mainDrawerTab === 'avatar' && avatarSubTab === 'hairStyle' && (
                 <div className="grid grid-cols-2 gap-2.5">
@@ -1884,7 +1884,7 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
             </div>
 
             {/* Drawer Footer Tip */}
-            <div className="p-3 bg-amber-50/90 border-t border-[#ffd0bb] flex items-center justify-between text-xs text-[#855300] font-bold">
+            <div className="shrink-0 p-3 bg-amber-50/90 border-t border-[#ffd0bb] flex items-center justify-between text-xs text-[#855300] font-bold">
               <span className="flex items-center gap-1.5 text-[11px] sm:text-xs">
                 <span>💡</span>
                 <span className="truncate max-w-[200px] sm:max-w-none">Completa lecciones en los mundos para ganar premios</span>
@@ -1902,7 +1902,8 @@ export const AvatarRoomView: React.FC<AvatarRoomViewProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

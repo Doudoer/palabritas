@@ -7,8 +7,27 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.14 - Corrección Completa de Mi Habitación, Armario Mágico y Minijuegos en Móvil y APK`
-- **Hash de Commit:** Pendiente de push a `origin/main` (auto-desplegado en VPS `167.235.21.59`)
+## 📌 Checkpoint Actual: `v0.1.15 - Solución Robusta del Armario Mágico en APK Android (Portal Directo a Body, Altura Garantizada y Compilación APK)`
+- **Hash de Commit:** Pendiente de commit y push a `origin/main` (auto-desplegado en VPS `167.235.21.59`)
+- **Estado General:** ✅ 100% Funcional y Verificado en Simulación Móvil Android (462x1024).
+  1. **Diagnóstico y Corrección del Armario como Línea Horizontal de 8px en APK (`AvatarRoomView.tsx`):**
+     - **Causa raíz:** En el WebView de Android, un contenedor flex con `max-height` (sin `height` explícito ni `min-height`) que contenía un hijo `flex-1` (`flex: 1 1 0%`) con `overflow-y-auto` y `overflow-hidden` en el padre colapsaba su altura intrínseca a 0px. Como tenía `border-4 border-[#ffddb8]` (4px arriba + 4px abajo), se convertía en una línea horizontal exacta de 8px en el centro de la pantalla, recortando todo el contenido interno.
+     - **Corrección:**
+       - **Renderizado con `createPortal(..., document.body)`:** Monta el diálogo directamente sobre el `<body>`, aislándolo de cualquier contenedor padre con `overflow-x-hidden` o contextos de apilamiento restrictivos.
+       - **Dimensiones Explícitas y Seguras:** `h-[86vh] sm:h-[84vh] min-h-[460px] max-h-[780px] w-full max-w-lg`.
+       - **Aislamiento Flexbox:** Se añadieron `shrink-0` a la cabecera, pestañas principales, chips de categorías y pie, junto con `flex-1 min-h-0 overflow-y-auto` al área del catálogo.
+       - **Posicionamiento amigable para pantallas pequeñas:** `overflow-y-auto` en el fondo y `my-auto` en la ventana modal.
+  2. **Configuración de WebView Android y Desactivación de Caché Estancada (`MainActivity.kt`):**
+     - Se añadió `settings.cacheMode = WebSettings.LOAD_NO_CACHE` y `clearCache(true)` para que la APK siempre consulte los assets más recientes desplegados en el servidor sin atrapar versiones previas.
+  3. **Recompilación del Binario APK (`palabritas.apk`):**
+     - Compilado exitosamente con Gradle 9.5.0 (`./gradlew assembleDebug`), generando el binario actualizado `palabritas.apk` en la raíz del proyecto.
+  4. **Verificación Automatizada en Emulador Móvil Android:**
+     - Simulación en Puppeteer móvil (`462x1024`, User Agent de Android 14) verificando que el modal mide exactamente `780px` de altura, mostrando cabecera, pestañas `Mi Niña` (34), `Mi Habitación` (41), filtros de categoría, catálogo completo y botón de cierre (`sim_local_armario_fixed.png`).
+
+---
+
+## 📌 Checkpoint Anterior: `v0.1.14 - Corrección Completa de Mi Habitación, Armario Mágico y Minijuegos en Móvil y APK`
+- **Hash de Commit:** `bc925d9` (Sincronizado con GitHub `origin/main` y auto-desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ 100% Funcional y Verificado con Simulación Móvil en Google Chrome.
   1. **Solución del Avatar Cortado en Pantallas Móviles (`AvatarRoomView.tsx`):**
      - **Causa raíz:** El avatar y los muebles estaban anidados dentro del contenedor del suelo (`floorRef`) que tenía `h-[38%]` y `overflow-hidden`. En pantallas móviles (donde el stage medía ~290px), el suelo medía solo ~110px de alto, cortando los 60px superiores del avatar (ojos, frente, coletas y bocadillos).
