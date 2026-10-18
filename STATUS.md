@@ -8,7 +8,7 @@
 ---
 
 ## 📌 Checkpoint Actual: `v0.1.12 - Sistema de Recompensas Avatar World (Habitación Interactiva Mágica, Avatar Animado y Recompensas por Misiones de Aprendizaje)`
-- **Hash de Commit:** Pendiente de commit y push a `origin/main`
+- **Hash de Commit:** `821d67f` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ Producción Lista. Se transformó integralmente el sistema de recompensas en un espacio inmersivo tipo **Avatar World / Toca Life** especialmente adaptado a la pedagogía de *Palabritas* para niños de 5 a 7 años:
   1. **Habitación Inicial Vacía ("Mi Habitación Mágica"):**
      - El infante comienza con una habitación espaciosa y acogedora sin amueblar (paredes crema y suelo de parquet limpios, sin cama, sin escritorio, sin alfombra, sin cuadros y sin mascotas).
