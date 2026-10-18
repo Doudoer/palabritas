@@ -8,7 +8,7 @@
 ---
 
 ## 📌 Checkpoint Actual: `v0.1.8 - Motor Híbrido de Audio Dual (Stream de Audio MP3 de Alta Definición + Proxy Nginx /api/tts + Fallback SpeechSynthesis)`
-- **Hash de Commit:** Pendiente de commit (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
+- **Hash de Commit:** `517b16c` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ Producción Estable. Se implementó una arquitectura de audio híbrida dual de alta fidelidad:
   1. **Motor Primario (Stream de Audio MP3 Nativo):** Utiliza `HTMLAudioElement` con el proxy de servidor `/api/tts` (alimentado por síntesis vocal en español con calidad de estudio). Funciona en el 100% de los dispositivos, incluidos teléfonos y PCs con Windows que no tienen paquetes de voz en español instalados, dispositivos Android sin Google TTS, y Safari/iOS sin verse afectado por el interruptor físico de silencio.
   2. **Motor Secundario (SpeechSynthesis Fallback):** Si el dispositivo está sin conexión a internet, conmuta transparentemente a la API nativa del navegador con recuperación de cola y voces cacheadas.
