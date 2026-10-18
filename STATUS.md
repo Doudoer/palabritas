@@ -7,8 +7,24 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.15 - Solución Robusta del Armario Mágico en APK Android (Portal Directo a Body, Altura Garantizada y Compilación APK)`
-- **Hash de Commit:** Pendiente de commit y push a `origin/main` (auto-desplegado en VPS `167.235.21.59`)
+## 📌 Checkpoint Actual: `v0.1.16 - Limpieza Total de Docker en Local y VPS (Aislamiento Exclusivo de Palabritas)`
+- **Fecha:** 18 de Octubre, 2026 (19:15 UTC-4)
+- **Estado General:** ✅ Docker local limpio (11 GB recuperados) y Docker VPS depurado al 100% (5.35 GB recuperados).
+  1. **Docker en el VPS (`167.235.21.59`):**
+     - Se ejecutó `docker builder prune -a -f` y `docker system prune -f`.
+     - Se eliminaron 5.35 GB de caché de compilación acumulada.
+     - Espacio en disco del VPS liberado: de 7.3 GB en uso a solo **2.4 GB en uso (7% del disco)**, con **34 GB libres**.
+     - El único contenedor y la única imagen presente en el VPS es `palabritas:latest` (`palabritas-app`, estado `healthy` en puerto 80).
+  2. **Docker en la Máquina Local:**
+     - Se eliminó el contenedor `palabritas-app` y las imágenes `palabritas:latest`, `oven/bun:1-alpine`, `oven/bun:latest`, `nginx:1.27-alpine`.
+     - Se liberaron **11.02 GB** de caché de compilación en el disco local de la Mac.
+     - Se conservaron los demás contenedores locales ajenos (`pay4myjunkcar` y `radar-mysql`).
+     - Desarrollo local sin Docker: la app corre directamente con `npm run dev` en el puerto 3000 vía Vite HMR.
+
+---
+
+## 📌 Checkpoint Anterior: `v0.1.15 - Solución Robusta del Armario Mágico en APK Android (Portal Directo a Body, Altura Garantizada y Compilación APK)`
+- **Hash de Commit:** `41262f2` (Sincronizado con GitHub `origin/main` y auto-desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ 100% Funcional y Verificado en Simulación Móvil Android (462x1024).
   1. **Diagnóstico y Corrección del Armario como Línea Horizontal de 8px en APK (`AvatarRoomView.tsx`):**
      - **Causa raíz:** En el WebView de Android, un contenedor flex con `max-height` (sin `height` explícito ni `min-height`) que contenía un hijo `flex-1` (`flex: 1 1 0%`) con `overflow-y-auto` y `overflow-hidden` en el padre colapsaba su altura intrínseca a 0px. Como tenía `border-4 border-[#ffddb8]` (4px arriba + 4px abajo), se convertía en una línea horizontal exacta de 8px en el centro de la pantalla, recortando todo el contenido interno.
