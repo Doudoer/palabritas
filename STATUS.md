@@ -8,7 +8,7 @@
 ---
 
 ## 📌 Checkpoint Actual: `v0.1.3 - Fix Repasar Lección, Error Boundary & Blindaje con tsc`
-- **Hash de Commit:** Próximo commit a pushear a `main`
+- **Hash de Commit:** `b41b7e1` (y posteriores)
 - **Estado General:** ✅ Producción Estable, Pantalla en Blanco Resuelta, Compilación y Tipado 100% Blindados.
 - **Pruebas Automatizadas:** 4,500 aserciones ejecutadas (0 errores, 0 advertencias) + `tsc --noEmit` en pipeline.
 
