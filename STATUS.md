@@ -8,7 +8,7 @@
 ---
 
 ## 📌 Checkpoint Actual: `v0.1.7 - Diagnóstico y Reparación Integral del Motor de Audio y Síntesis de Voz (Web Audio API & Web Speech API)`
-- **Hash de Commit:** Pendiente de commit (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
+- **Hash de Commit:** `93edd01` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ Producción Estable. Se diagnosticó y resolvió de raíz la causa por la cual la aplicación se quedaba sin audio. Se implementó una arquitectura de audio blindada con desbloqueo proactivo en el primer gesto de usuario (resolviendo la política de Autoplay de navegadores), eliminación de la carrera asíncrona de `speechSynthesis.cancel()` en Chromium, recuperación automática ante congelamientos con watchdog, retención global contra Garbage Collection prematuro y caché de voces en español (`es-MX`, `es-419`, `es-ES`).
 - **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía (0 fallos) + 4 pruebas de caligrafía infantil (4/4 pasando) + `tsc --noEmit` limpio + Docker build exitoso.
 
