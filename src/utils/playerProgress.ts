@@ -62,7 +62,7 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   lastPlayedDate: getTodayDateString(),
   equippedCostume: '',
   unlockedCostumes: [],
-  playerName: 'Pequeño Campeón',
+  playerName: 'Pequeña Campeona',
   avatarConfig: { ...DEFAULT_AVATAR_CONFIG },
   roomConfig: { ...DEFAULT_ROOM_CONFIG },
   unlockedRoomItems: [
@@ -116,10 +116,17 @@ export function loadPlayerProgress(): PlayerProgress {
     }
 
     // Merge avatar and room configs with defaults safely
-    const avatarConfig: AvatarConfig = {
+    let avatarConfig: AvatarConfig = {
       ...DEFAULT_AVATAR_CONFIG,
       ...(parsed.avatarConfig || {}),
     };
+
+    // If existing saved avatar was on the old boy default ('corto' + 'outfit-basic'), upgrade to sweet girl avatar
+    if (avatarConfig.hairStyle === 'corto' && avatarConfig.equippedOutfit === 'outfit-basic') {
+      avatarConfig = {
+        ...DEFAULT_AVATAR_CONFIG,
+      };
+    }
 
     const roomConfig: RoomConfig = {
       ...DEFAULT_ROOM_CONFIG,
@@ -140,7 +147,9 @@ export function loadPlayerProgress(): PlayerProgress {
       lastPlayedDate: today,
       equippedCostume: typeof parsed.equippedCostume === 'string' ? parsed.equippedCostume : '',
       unlockedCostumes: Array.isArray(parsed.unlockedCostumes) ? parsed.unlockedCostumes : [],
-      playerName: typeof parsed.playerName === 'string' && parsed.playerName ? parsed.playerName : 'Pequeño Campeón',
+      playerName: typeof parsed.playerName === 'string' && parsed.playerName && parsed.playerName !== 'Pequeño Campeón'
+        ? parsed.playerName
+        : 'Pequeña Campeona',
       avatarConfig,
       roomConfig,
       unlockedRoomItems: Array.from(unlockedRoomItemsSet),

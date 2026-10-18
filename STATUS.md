@@ -7,7 +7,30 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.12 - Sistema de Recompensas Avatar World (Habitación Interactiva Mágica, Avatar Animado y Recompensas por Misiones de Aprendizaje)`
+## 📌 Checkpoint Actual: `v0.1.13 - Logo Oficial 3D en App y APK, Avatar Niña con Coletas y Vestido, y Habitación Mágica Totalmente Interactiva`
+- **Hash de Commit:** Pendiente de commit y push a `origin/main`
+- **Estado General:** ✅ Producción Lista. Integración de los requerimientos visuales e interactivos solicitados por el usuario:
+  1. **Nuevo Logo 3D Oficial en Web, PWA y APK Android:**
+     - Extracción sin distorsión del logo del libro 3D de *Palabritas* con portada brillante, destellos y burbujas.
+     - Generación de todos los tamaños PWA y web: `pwa-512x512.png`, `pwa-maskable-512x512.png`, `pwa-192x192.png`, `apple-touch-icon.png`, `favicon.ico`, `favicon.png`, `icon.svg` y `logo-app.png`.
+     - Integración del logo en la cabecera principal de la aplicación (`src/App.tsx` y `src/data/appData.ts`).
+     - Actualización completa de todos los iconos de Android Studio y del paquete binario `palabritas.apk` (`res/mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}-v4/ic_launcher.webp` e `ic_launcher_round.webp`).
+  2. **Avatar Niña Expresiva y Adorable ("Pequeña Campeona"):**
+     - Configuración por defecto adaptada a niña con peinado de **coletas** con lazos rosados (`hairStyle: 'coletas'`), ojos dulces con pestañitas expresivas (`pestañitas`), mejillas sonrosadas con rubor (`blush`) y vestido infantil festivo (`outfit-vestido`).
+     - Ampliación del catálogo con peinados (trencitas, moñitos, melena, rizado), trajes (vestidito con vuelos, jardinera con lazo, traje de hada con alitas, tutú de bailarina, pijama de conejito) y accesorios para el pelo (lazo gigante, flor primaveral).
+  3. **Habitación Totalmente Interactiva con Muebles y Accesorios:**
+     - **Caminar por la habitación:** Al tocar cualquier punto del suelo, la niña camina de forma fluida hacia la coordenada indicada, orientándose en la dirección correcta (`avatarFacing`), con animación de onda expansiva en el suelo (`floorTapRipple`).
+     - **Cama interactiva (Dormir y Despertar):** Al tocar la cama, la niña se acuesta, se activa el estado `avatarAction = 'sleeping'`, aparecen burbujas animadas de sueño `Zzz 💤`, y se reproduce un arrullo con voz cariñosa. Al tocarla de nuevo o tocar el piso, se levanta contenta.
+     - **Escritorio y Lámpara Mágica:** Al tocar la mesa, se enciende el halo de luz cálida de la lámpara (`isDeskLampOn`) y se abre un libro de cuentos con letras mágicas flotantes (`isMagicBookOpen`).
+     - **Alfombra y Baile:** Al tocar la alfombra, la niña salta de alegría y baila (`avatarAction = 'dancing'`) con notas musicales de celebración.
+     - **Mascota Afectuosa:** Al tocar la mascota en su cojín, salta dando una pirueta con corazones y la niña le hace mimos (`avatarAction = 'petting'`).
+     - **Botón "Mi Armario":** Despliega el cajón del ropero para vestirse y personalizarse fácilmente.
+     - **Radio Musical Infantil:** Permite encender música alegre con notas musicales flotantes al tocarla.
+- **Pruebas Automatizadas:** 531 pruebas lógicas y de ortografía (0 fallos) + `tsc --noEmit` limpio + Vite build exitoso + Contenedor Docker `palabritas-app` activo y respondiendo HTTP 200 OK en `http://localhost:3000`.
+
+---
+
+## 📌 Checkpoint Anterior: `v0.1.12 - Sistema de Recompensas Avatar World (Habitación Interactiva Mágica, Avatar Animado y Recompensas por Misiones de Aprendizaje)`
 - **Hash de Commit:** `821d67f` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ Producción Lista. Se transformó integralmente el sistema de recompensas en un espacio inmersivo tipo **Avatar World / Toca Life** especialmente adaptado a la pedagogía de *Palabritas* para niños de 5 a 7 años:
   1. **Habitación Inicial Vacía ("Mi Habitación Mágica"):**

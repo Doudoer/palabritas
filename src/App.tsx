@@ -138,7 +138,7 @@ export default function App() {
           >
             <img
               alt="Palabritas Logo"
-              className="h-8 w-auto object-contain"
+              className="h-10 w-10 rounded-2xl object-cover shadow-md ring-2 ring-amber-300"
               src={ASSETS.logo}
             />
             <span className="text-xl text-[#351000] font-bold tracking-tight hidden xs:inline">
