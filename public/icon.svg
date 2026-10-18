@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7e5f" />
+      <stop offset="50%" stop-color="#feb47b" />
+      <stop offset="100%" stop-color="#ffd0bb" />
+    </linearGradient>
+    <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff176" />
+      <stop offset="100%" stop-color="#fbc02d" />
+    </linearGradient>
+    <linearGradient id="bookGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6cf8bb" />
+      <stop offset="50%" stop-color="#4edea3" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#7c2d12" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded rectangle -->
+  <rect width="512" height="512" rx="110" fill="url(#bgGrad)" />
+
+  <!-- Inner Soft Ring -->
+  <circle cx="256" cy="256" r="210" fill="#ffffff" fill-opacity="0.2" />
+
+  <!-- Open Magic Book Base -->
+  <g filter="url(#dropShadow)" transform="translate(0, 30)">
+    <!-- Book Left Page -->
+    <path d="M120 340 C180 320, 230 330, 256 345 C256 425, 256 425, 256 425 C230 410, 180 400, 120 420 Z" fill="#ffffff" />
+    <!-- Book Right Page -->
+    <path d="M392 340 C332 320, 282 330, 256 345 C256 425, 256 425, 256 425 C282 410, 332 400, 392 420 Z" fill="#fdf4ff" />
+    <!-- Book Spine & Cover Trim -->
+    <path d="M110 348 C175 328, 235 338, 256 352 C277 338, 337 328, 402 348 L395 428 C335 408, 277 418, 256 432 C235 418, 175 408, 117 428 Z" fill="url(#bookGrad)" />
+    <!-- Letter lines in book -->
+    <text x="175" y="380" font-family="'Quicksand', sans-serif" font-size="32" font-weight="900" fill="#3b82f6" text-anchor="middle">A</text>
+    <text x="337" y="380" font-family="'Quicksand', sans-serif" font-size="32" font-weight="900" fill="#ec4899" text-anchor="middle">B</text>
+  </g>
+
+  <!-- Chispita The Magic Star Character -->
+  <g filter="url(#dropShadow)" transform="translate(256, 195)">
+    <!-- Star Points -->
+    <path d="M 0,-120
+             L 32,-35
+             L 122,-30
+             L 52,32
+             L 78,120
+             L 0,68
+             L -78,120
+             L -52,32
+             L -122,-30
+             L -32,-35 Z"
+          fill="url(#starGrad)"
+          stroke="#f59e0b"
+          stroke-width="6"
+          stroke-linejoin="round" />
+
+    <!-- Rosy Cheeks -->
+    <circle cx="-38" cy="22" r="14" fill="#fb7185" fill-opacity="0.6" />
+    <circle cx="38" cy="22" r="14" fill="#fb7185" fill-opacity="0.6" />
+
+    <!-- Big Sparkly Eyes -->
+    <circle cx="-25" cy="5" r="11" fill="#351000" />
+    <circle cx="-22" cy="2" r="4" fill="#ffffff" />
+    <circle cx="25" cy="5" r="11" fill="#351000" />
+    <circle cx="28" cy="2" r="4" fill="#ffffff" />
+
+    <!-- Cheerful Smile -->
+    <path d="M -16,24 Q 0,38 16,24" stroke="#351000" stroke-width="4.5" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- Sparkles -->
+  <g fill="#ffffff">
+    <path d="M 100,100 Q 110,120 120,120 Q 110,120 100,140 Q 90,120 80,120 Q 90,120 100,100 Z" opacity="0.9" />
+    <path d="M 410,110 Q 420,125 430,125 Q 420,125 410,140 Q 400,125 390,125 Q 400,125 410,110 Z" opacity="0.9" />
+    <circle cx="140" cy="80" r="5" opacity="0.8" />
+    <circle cx="370" cy="85" r="6" opacity="0.8" />
+    <circle cx="395" cy="260" r="7" opacity="0.8" />
+  </g>
+</svg>

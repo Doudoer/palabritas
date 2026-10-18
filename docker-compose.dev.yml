@@ -1,0 +1,15 @@
+services:
+  palabritas-dev:
+    container_name: palabritas-dev
+    build:
+      context: .
+      target: dev
+    image: palabritas:dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped

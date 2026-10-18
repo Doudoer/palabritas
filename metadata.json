@@ -1,0 +1,6 @@
+{
+  "name": "Palabritas - Aprende a Leer y Escribir",
+  "description": "Aplicación educativa infantil de lectoescritura, fonética en español, trazos táctiles y álbum de recompensas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

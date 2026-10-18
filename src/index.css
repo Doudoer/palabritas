@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Quicksand', sans-serif;
+  --font-quicksand: 'Quicksand', sans-serif;
+
+  --color-surface: #fff8f6;
+  --color-surface-dim: #ffd0bb;
+  --color-surface-bright: #fff8f6;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fff1eb;
+  --color-surface-container: #ffeae1;
+  --color-surface-container-high: #ffe2d6;
+  --color-surface-container-highest: #ffdbcc;
+  --color-surface-variant: #ffdbcc;
+  --color-on-surface: #351000;
+  --color-on-surface-variant: #534434;
+  --color-inverse-surface: #561f00;
+  --color-inverse-on-surface: #ffede6;
+  --color-outline: #867461;
+  --color-outline-variant: #d8c3ad;
+  --color-surface-tint: #855300;
+
+  --color-primary: #855300;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #f59e0b;
+  --color-on-primary-container: #613b00;
+  --color-inverse-primary: #ffb95f;
+  --color-primary-fixed: #ffddb8;
+  --color-primary-fixed-dim: #ffb95f;
+  --color-on-primary-fixed: #2a1700;
+  --color-on-primary-fixed-variant: #653e00;
+
+  --color-secondary: #006c49;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #6cf8bb;
+  --color-on-secondary-container: #00714d;
+  --color-secondary-fixed: #6ffbbe;
+  --color-secondary-fixed-dim: #4edea3;
+  --color-on-secondary-fixed: #002113;
+  --color-on-secondary-fixed-variant: #005236;
+
+  --color-tertiary: #006591;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #42bbff;
+  --color-on-tertiary-container: #004869;
+  --color-tertiary-fixed: #c9e6ff;
+  --color-tertiary-fixed-dim: #89ceff;
+  --color-on-tertiary-fixed: #001e2f;
+  --color-on-tertiary-fixed-variant: #004c6e;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+}
+
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Quicksand', sans-serif;
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Custom Chunky Button Shadows */
+.chunky-btn-amber {
+  box-shadow: 0 5px 0 0 #d97706;
+}
+.chunky-btn-amber:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 0 #d97706;
+}
+
+.chunky-btn-mint {
+  box-shadow: 0 5px 0 0 #005236;
+}
+.chunky-btn-mint:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 0 #005236;
+}
+
+.chunky-btn-blue {
+  box-shadow: 0 5px 0 0 #004869;
+}
+.chunky-btn-blue:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 0 #004869;
+}
+
+.chunky-card-peach {
+  box-shadow: 0 6px 0 0 #ffdbcc;
+}
+
+.chunky-card-amber {
+  box-shadow: 0 6px 0 0 #ffb95f;
+}
+
+.chunky-card-mint {
+  box-shadow: 0 6px 0 0 #6cf8bb;
+}
+
+.chunky-card-blue {
+  box-shadow: 0 6px 0 0 #89ceff;
+}
+
+/* Material Symbols Icon helper */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Animations */
+@keyframes pop-bounce {
+  0% { transform: scale(0.85) rotate(-3deg); }
+  45% { transform: scale(1.15) rotate(3deg); }
+  75% { transform: scale(0.96) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(1.5deg); }
+}
+
+@keyframes card-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-pop-bounce {
+  animation: pop-bounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 3s ease-in-out infinite;
+}
+
+.scratch-shimmer-border {
+  background: linear-gradient(90deg, #ffd0bb, #f59e0b, #6cf8bb, #42bbff, #ffd0bb);
+  background-size: 300% 300%;
+  animation: card-shimmer 6s linear infinite;
+}

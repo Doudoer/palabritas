@@ -1,0 +1,8 @@
+{
+  "appId": "com.palabritas.app",
+  "appName": "Palabritas",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
