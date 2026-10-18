@@ -8,7 +8,7 @@
 ---
 
 ## 📌 Checkpoint Actual: `v0.1.13 - Logo Oficial 3D en App y APK, Avatar Niña con Coletas y Vestido, y Habitación Mágica Totalmente Interactiva`
-- **Hash de Commit:** Pendiente de commit y push a `origin/main`
+- **Hash de Commit:** `dc291cf` (Sincronizado con GitHub `origin/main` y auto-desplegado en VPS `167.235.21.59`)
 - **Estado General:** ✅ Producción Lista. Integración de los requerimientos visuales e interactivos solicitados por el usuario:
   1. **Nuevo Logo 3D Oficial en Web, PWA y APK Android:**
      - Extracción sin distorsión del logo del libro 3D de *Palabritas* con portada brillante, destellos y burbujas.
