@@ -633,8 +633,10 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
               {/* Paso 2: Trazo Guiado en Pizarra */}
               <button
                 onClick={() => {
+                  const w = selectedModalWorld;
+                  if (!w) return;
                   setSelectedModalWorld(null);
-                  onOpenTracing(selectedModalWorld.focusLetter, selectedModalWorld.categoryFilter, selectedModalWorld.id);
+                  onOpenTracing(w.focusLetter, w.categoryFilter, w.id);
                 }}
                 type="button"
                 className="p-3 bg-white hover:bg-emerald-50 rounded-2xl border-2 border-emerald-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
@@ -658,8 +660,10 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
               {/* Paso 3: Construye y Arma Sílabas */}
               <button
                 onClick={() => {
+                  const w = selectedModalWorld;
+                  if (!w) return;
                   setSelectedModalWorld(null);
-                  onStartWordGame(selectedModalWorld.letterIndex, selectedModalWorld.categoryFilter, selectedModalWorld.id);
+                  onStartWordGame(w.letterIndex, w.categoryFilter, w.id);
                 }}
                 type="button"
                 className="p-3 bg-white hover:bg-sky-50 rounded-2xl border-2 border-sky-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
@@ -684,8 +688,10 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
               {onOpenWriting && (
                 <button
                   onClick={() => {
+                    const w = selectedModalWorld;
+                    if (!w) return;
                     setSelectedModalWorld(null);
-                    onOpenWriting(selectedModalWorld.focusLetter);
+                    onOpenWriting(w.focusLetter);
                   }}
                   type="button"
                   className="p-3 bg-white hover:bg-purple-50 rounded-2xl border-2 border-purple-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
@@ -712,6 +718,7 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
             <button
               onClick={() => {
                 const w = selectedModalWorld;
+                if (!w) return;
                 setSelectedModalWorld(null);
                 onStartWordGame(w.letterIndex, w.categoryFilter, w.id);
               }}

@@ -104,6 +104,7 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
   const [showVictoryModal, setShowVictoryModal] = useState(false);
   const [unlockedNextWorldTitle, setUnlockedNextWorldTitle] = useState<string | null>(null);
   const [autoCountdown, setAutoCountdown] = useState<number | null>(null);
+  const [shakingCard, setShakingCard] = useState<string | null>(null);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Daily tracker state
@@ -147,10 +148,6 @@ export const ConstruyeScreen: React.FC<ConstruyeScreenProps> = ({
   useEffect(() => {
     if (initialFilter) {
       setActiveFilter(initialFilter);
-      if (initialFilter === 'vocales') {
-        const vowelIdx = ALPHABET_DATA.findIndex(l => l.group === 'vocal');
-        setExerciseIndex(vowelIdx !== -1 ? vowelIdx : 0);
-      }
     }
   }, [initialFilter]);
 

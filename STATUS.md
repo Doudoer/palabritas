@@ -1,16 +1,16 @@
 # 📋 Palabritas - Registro de Estado y Checkpoints (STATUS)
 
 > **Documento Vivo de Estado, Arquitectura, Pruebas y Despliegues Continuos.**  
-> **Última Actualización:** 18 de Octubre, 2026 (01:53 UTC-4)  
+> **Última Actualización:** 18 de Octubre, 2026 (02:15 UTC-4)  
 > **Repositorio Oficial:** [https://github.com/Doudoer/palabritas](https://github.com/Doudoer/palabritas)  
 > **Servidor en Producción:** `http://167.235.21.59` (Nginx 1.27.5 en Docker)
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.2 - Auto-Avance, Caligrafía Infantil y Validación 100%`
-- **Hash de Commit:** `cc5b621` (y posteriores)
-- **Estado General:** ✅ Producción Estable, Pruebas 100% Exitosas, Auto-Sync Activo en VPS.
-- **Pruebas Automatizadas:** 4,500 aserciones ejecutadas (0 errores, 0 advertencias).
+## 📌 Checkpoint Actual: `v0.1.3 - Fix Repasar Lección, Error Boundary & Blindaje con tsc`
+- **Hash de Commit:** Próximo commit a pushear a `main`
+- **Estado General:** ✅ Producción Estable, Pantalla en Blanco Resuelta, Compilación y Tipado 100% Blindados.
+- **Pruebas Automatizadas:** 4,500 aserciones ejecutadas (0 errores, 0 advertencias) + `tsc --noEmit` en pipeline.
 
 ---
 
@@ -73,6 +73,16 @@
 - [scripts/validate-exercises.ts](file:///Users/user/Desktop/palabritas%20v0.1/scripts/validate-exercises.ts): 3,982 aserciones sobre consistencia de datos, distractores, mundos, cuentos y sílabas.
 - [scripts/test-game-logic.ts](file:///Users/user/Desktop/palabritas%20v0.1/scripts/test-game-logic.ts): 518 aserciones sobre lógica de juego, ortografía válida en español y transiciones fluidas de auto-avance.
 - **Resultado:** 100% de pruebas aprobadas sin fallos.
+
+### Paso 7: Diagnóstico y Solución de Pantalla en Blanco al "Repasar" Lección / Mundo
+- **Causa Raíz:**
+  - Al pulsar el botón "Repasar" en [src/components/MundosScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/MundosScreen.tsx), se navega a la pestaña de `palabras` y modo `construye`. En [src/components/ConstruyeScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/ConstruyeScreen.tsx), la variable de estado `shakingCard` (usada para la animación de error al tocar una sílaba incorrecta) no tenía su declaración `useState<string | null>(null)`. Esto desencadenaba un `ReferenceError: shakingCard is not defined` durante el renderizado inicial, provocando el desmontaje completo de React y la pantalla en blanco (White Screen of Death).
+- **Acciones y Correcciones Realizadas:**
+  1. **Declaración de Estado en [src/components/ConstruyeScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/ConstruyeScreen.tsx):** Se agregó `const [shakingCard, setShakingCard] = useState<string | null>(null);`.
+  2. **Preservación de Selección de Letra:** Se corrigió el efecto de sincronización para que al repasar una lección específica no sea sobreescrita por el índice 0 de vocales.
+  3. **Sincronización de Sub-Pestaña en [src/components/PalabrasScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/PalabrasScreen.tsx):** Se añadió sincronización reactiva de `initialSubTab` con `useEffect`.
+  4. **Protección con `ErrorBoundary` en [src/components/ErrorBoundary.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/ErrorBoundary.tsx):** Se implementó un límite de errores React con temática infantil y Chispita, garantizando que ante cualquier excepción imprevista el niño o padre vea una interfaz amigable con botón "Volver al Mapa de Mundos" en lugar de una pantalla en blanco.
+  5. **Blindaje del Script de Build:** Se actualizó `package.json` para encadenar `tsc --noEmit && vite build`, asegurando que el compilador de TypeScript atrape cualquier error de tipado o variable no declarada antes de generar los artefactos de producción y en CI/CD.
 
 ---
 

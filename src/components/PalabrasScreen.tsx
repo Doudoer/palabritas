@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ConstruyeScreen } from './ConstruyeScreen';
 import { EscribeScreen } from './EscribeScreen';
 import { playPop, triggerHaptic, speakSpanish } from '../utils/audio';
@@ -27,6 +27,10 @@ export const PalabrasScreen: React.FC<PalabrasScreenProps> = ({
   onCompleteWorld,
 }) => {
   const [subTab, setSubTab] = useState<'construye' | 'escribe'>(initialSubTab);
+
+  useEffect(() => {
+    setSubTab(initialSubTab);
+  }, [initialSubTab]);
 
   const handleSubTabChange = (newTab: 'construye' | 'escribe') => {
     playPop(520);

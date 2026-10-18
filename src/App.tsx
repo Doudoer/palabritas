@@ -15,6 +15,7 @@ import { PedagogicalReportModal } from './components/PedagogicalReportModal';
 import { PhonicsSessionModal } from './components/PhonicsSessionModal';
 import { CelebrationChestModal } from './components/CelebrationChestModal';
 import { InstallAppModal } from './components/InstallAppModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { WORLDS_DATA } from './data/worldsData';
 import confetti from 'canvas-confetti';
 import { playPop, playSparkleChime, playFanfare, speakSpanish, triggerHaptic } from './utils/audio';
@@ -211,55 +212,57 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative w-full pt-22 pb-24 px-4 max-w-xl mx-auto">
-        {activeTab === 'mundos' && (
-          <MundosScreen
-            onStartWordGame={handleStartWordGame}
-            onOpenStory={() => handleTabChange('cuentos')}
-            onOpenTracing={handleOpenTracing}
-            onOpenWriting={handleOpenWriting}
-            onOpenRewards={() => handleTabChange('premios')}
-            onOpenPhonicsSession={() => setIsPhonicsSessionOpen(true)}
-            completedWorlds={playerProgress.completedWorlds}
-          />
-        )}
+        <ErrorBoundary onReset={() => handleTabChange('mundos')}>
+          {activeTab === 'mundos' && (
+            <MundosScreen
+              onStartWordGame={handleStartWordGame}
+              onOpenStory={() => handleTabChange('cuentos')}
+              onOpenTracing={handleOpenTracing}
+              onOpenWriting={handleOpenWriting}
+              onOpenRewards={() => handleTabChange('premios')}
+              onOpenPhonicsSession={() => setIsPhonicsSessionOpen(true)}
+              completedWorlds={playerProgress.completedWorlds}
+            />
+          )}
 
-        {activeTab === 'trazos' && (
-          <TrazosScreen
-            onBackToMap={() => handleTabChange('mundos')}
-            onAddStars={handleAddStars}
-            initialLetter={selectedLetter}
-            initialFilter={letterFilter}
-          />
-        )}
+          {activeTab === 'trazos' && (
+            <TrazosScreen
+              onBackToMap={() => handleTabChange('mundos')}
+              onAddStars={handleAddStars}
+              initialLetter={selectedLetter}
+              initialFilter={letterFilter}
+            />
+          )}
 
-        {activeTab === 'palabras' && (
-          <PalabrasScreen
-            onBackToMap={() => handleTabChange('mundos')}
-            onOpenCelebration={() => setIsCelebrationModalOpen(true)}
-            onAddStars={handleAddStars}
-            initialSubTab={palabrasSubTab}
-            initialLetterIndex={selectedLetterIndex}
-            initialWritingLetter={selectedWritingLetter}
-            initialFilter={letterFilter}
-            currentWorldId={playerProgress.currentWorldId}
-            onCompleteWorld={handleCompleteWorld}
-          />
-        )}
+          {activeTab === 'palabras' && (
+            <PalabrasScreen
+              onBackToMap={() => handleTabChange('mundos')}
+              onOpenCelebration={() => setIsCelebrationModalOpen(true)}
+              onAddStars={handleAddStars}
+              initialSubTab={palabrasSubTab}
+              initialLetterIndex={selectedLetterIndex}
+              initialWritingLetter={selectedWritingLetter}
+              initialFilter={letterFilter}
+              currentWorldId={playerProgress.currentWorldId}
+              onCompleteWorld={handleCompleteWorld}
+            />
+          )}
 
-        {activeTab === 'cuentos' && (
-          <CuentosScreen
-            onBackToMap={() => handleTabChange('mundos')}
-            onAddStars={handleAddStars}
-          />
-        )}
+          {activeTab === 'cuentos' && (
+            <CuentosScreen
+              onBackToMap={() => handleTabChange('mundos')}
+              onAddStars={handleAddStars}
+            />
+          )}
 
-        {activeTab === 'premios' && (
-          <PremiosScreen
-            starsCount={playerProgress.starsCount}
-            onAddStars={handleAddStars}
-            onOpenCelebrationModal={() => setIsCelebrationModalOpen(true)}
-          />
-        )}
+          {activeTab === 'premios' && (
+            <PremiosScreen
+              starsCount={playerProgress.starsCount}
+              onAddStars={handleAddStars}
+              onOpenCelebrationModal={() => setIsCelebrationModalOpen(true)}
+            />
+          )}
+        </ErrorBoundary>
       </main>
 
       {/* Fixed Bottom Navigation Dock (5 Kid-Friendly Tactile Tabs) */}
