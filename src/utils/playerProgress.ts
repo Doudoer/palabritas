@@ -40,7 +40,7 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   starsCount: 125,
   completedWorlds: [1], // Mundo 1 (Vocales) completed by default for nice onboarding
   currentWorldId: 2,  // Mundo 2 (M de Manzana) is active
-  unlockedStickers: ['stk-world-1', 'stk-1', 'stk-2', 'spec-dragon'],
+  unlockedStickers: ['stk-world-1'],
   masteredLetters: ['A', 'E', 'I', 'O', 'U'],
   learnedWords: ['ALA', 'MAMA', 'OSO'],
   streakDays: 3,
@@ -75,7 +75,7 @@ export function loadPlayerProgress(): PlayerProgress {
       currentWorldId,
       unlockedStickers: Array.isArray(parsed.unlockedStickers) && parsed.unlockedStickers.length > 0
         ? parsed.unlockedStickers
-        : ['stk-world-1', 'stk-1', 'stk-2', 'spec-dragon'],
+        : ['stk-world-1'],
       masteredLetters: Array.isArray(parsed.masteredLetters) ? parsed.masteredLetters : ['A', 'E', 'I', 'O', 'U'],
       learnedWords: Array.isArray(parsed.learnedWords) ? parsed.learnedWords : ['ALA', 'MAMA', 'OSO'],
       streakDays: typeof parsed.streakDays === 'number' ? parsed.streakDays : 3,

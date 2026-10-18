@@ -27,7 +27,6 @@ import {
   buyPlayerCostume,
   equipPlayerCostume,
   calculatePlayerLevel,
-  setPlayerName,
   PlayerProgress,
 } from '../utils/playerProgress';
 
@@ -60,7 +59,6 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
   const [scratchProgress, setScratchProgress] = useState(0);
   const [scratchClaimed, setScratchClaimed] = useState(false);
   const [isScratching, setIsScratching] = useState(false);
-  const [mysteryIndex, setMysteryIndex] = useState(0);
   const scratchCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Chest unboxing state
@@ -118,7 +116,7 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
       return {
         ...spec,
         isUnlocked,
-        worldName: 'Cofre Sorpresa',
+        worldName: 'Lámina Secreta',
       };
     });
 
@@ -143,13 +141,16 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
     return allStickersList.filter(s => s.isUnlocked).length;
   }, [allStickersList]);
 
-  // Current Mystery Sticker for Scratch Card
-  const currentMystery = useMemo(() => {
-    return SPECIAL_MYSTERY_STICKERS[mysteryIndex % SPECIAL_MYSTERY_STICKERS.length];
-  }, [mysteryIndex]);
+  // Unclaimed Scratch Mystery Prizes
+  const availableScratchPrizes = useMemo(() => {
+    return SPECIAL_MYSTERY_STICKERS.filter(p => !progress.unlockedStickers.includes(p.id));
+  }, [progress.unlockedStickers]);
 
-  // Scratch card canvas draw setup
-  useEffect(() => {
+  // Current Mystery Scratch Prize (Always the FIRST UNCLAIMED prize!)
+  const currentMystery = availableScratchPrizes.length > 0 ? availableScratchPrizes[0] : null;
+
+  // Draw or reset the scratch canvas foil
+  const drawFoil = () => {
     const canvas = scratchCanvasRef.current;
     if (!canvas) return;
 
@@ -159,10 +160,10 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
     const w = canvas.width;
     const h = canvas.height;
 
-    // Reset composite operation
     ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, w, h);
 
-    // Base holographic foil gradient
+    // Holographic foil gradient
     const grad = ctx.createLinearGradient(0, 0, w, h);
     grad.addColorStop(0, '#e2e8f0');
     grad.addColorStop(0.2, '#fde68a');
@@ -173,29 +174,40 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // Holographic stars & sparkles pattern
+    // Sparkles and stars
     for (let i = 0; i < 90; i++) {
       const px = Math.random() * w;
       const py = Math.random() * h;
-      ctx.fillStyle = Math.random() > 0.4 ? 'rgba(255,255,255,0.9)' : 'rgba(245,158,11,0.55)';
+      ctx.fillStyle = Math.random() > 0.4 ? 'rgba(255,255,255,0.95)' : 'rgba(245,158,11,0.6)';
       ctx.beginPath();
       ctx.arc(px, py, 1.5 + Math.random() * 3, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Centered foil title and invitation
+    // Foil text guide
     ctx.fillStyle = '#613b00';
     ctx.font = 'bold 20px Quicksand, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('★ RASCA AQUÍ CON TU DEDO ★', w / 2, h / 2 - 15);
+    ctx.fillText('★ RASCA CON TU DEDO O RATÓN ★', w / 2, h / 2 - 12);
 
     ctx.fillStyle = '#855300';
     ctx.font = 'bold 13px Quicksand, sans-serif';
-    ctx.fillText('✨ Descubre un Sticker Legendario y +50 ⭐ ✨', w / 2, h / 2 + 15);
+    ctx.fillText('✨ Descubre un Sticker Secreto y +50 ⭐ ✨', w / 2, h / 2 + 16);
 
     setScratchProgress(0);
     setScratchClaimed(false);
-  }, [mysteryIndex]);
+  };
+
+  // Re-draw canvas whenever active tab changes to 'rasca' or prize changes
+  useEffect(() => {
+    if (activeTab === 'rasca' && currentMystery) {
+      // Use setTimeout to ensure canvas DOM node has laid out
+      const timer = setTimeout(() => {
+        drawFoil();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, currentMystery?.id]);
 
   // Scratch movement interaction
   const handleScratchMove = (e: React.MouseEvent | React.TouchEvent) => {
@@ -218,7 +230,7 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
     // Erase the foil
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    ctx.arc(x, y, 28, 0, Math.PI * 2);
+    ctx.arc(x, y, 30, 0, Math.PI * 2);
     ctx.fill();
 
     playScratchSound();
@@ -226,12 +238,34 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
 
     // Increase scratch percentage smoothly
     if (scratchProgress < 100) {
-      setScratchProgress(prev => Math.min(100, prev + 3));
+      setScratchProgress(prev => {
+        const next = Math.min(100, prev + 3);
+        if (next >= 50 && prev < 50) {
+          playSparkleChime();
+        }
+        return next;
+      });
     }
   };
 
+  // Helper to fully reveal the card
+  const handleRevealCard = () => {
+    playScratchSound();
+    triggerHaptic(20);
+    const canvas = scratchCanvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+    setScratchProgress(100);
+    playSparkleChime();
+  };
+
+  // Claim the scratched prize
   const handleClaimScratch = () => {
-    if (scratchClaimed) return;
+    if (scratchClaimed || !currentMystery) return;
     playFanfare();
     playSparkleChime();
     triggerHaptic([40, 50, 80]);
@@ -240,25 +274,38 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
     claimPlayerSticker(currentMystery.id);
 
     // Update local state
-    setProgress(loadPlayerProgress());
+    const updated = loadPlayerProgress();
+    setProgress(updated);
     setScratchClaimed(true);
 
     confetti({
-      particleCount: 90,
-      spread: 80,
+      particleCount: 95,
+      spread: 85,
       origin: { y: 0.5 },
       colors: ['#f59e0b', '#6cf8bb', '#42bbff', '#ec4899', '#a855f7'],
     });
 
     speakSpanish(`¡Increíble! ¡Descubriste el sticker ${currentMystery.name}! ¡Has ganado cincuenta estrellas doradas!`);
-    showToast(`¡${currentMystery.name} pegado en tu álbum! ⭐ +50 Estrellas`);
+    showToast(`¡${currentMystery.name} guardado en tu álbum! ⭐ +50 Estrellas`);
   };
 
-  const handleResetScratch = () => {
-    playPop(420);
-    triggerHaptic(20);
-    setMysteryIndex(prev => prev + 1);
-    showToast('🔄 ¡Nueva tarjeta mágica preparada! ¡A raspar!');
+  // Advance to the next unclaimed card
+  const handleNextCard = () => {
+    playPop(440);
+    triggerHaptic(15);
+
+    const updated = loadPlayerProgress();
+    setProgress(updated);
+
+    const remaining = SPECIAL_MYSTERY_STICKERS.filter(p => !updated.unlockedStickers.includes(p.id));
+    if (remaining.length > 0) {
+      drawFoil();
+      speakSpanish(`¡Nueva lámina mágica preparada! ¡Rasca para descubrir el siguiente premio!`);
+      showToast(`🎁 ¡Nueva lámina preparada! Quedan ${remaining.length} por descubrir`);
+    } else {
+      speakSpanish(`¡Felicidades! ¡Has completado todos los premios secretos por ahora!`);
+      showToast(`🏆 ¡Has descubierto todos los premios disponibles!`);
+    }
   };
 
   // Open Mystery Star Chest
@@ -706,7 +753,7 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
                   {/* Badge */}
                   {stk.isUnlocked ? (
                     <span className="absolute top-1.5 right-1.5 bg-[#006c49] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-xs">
-                      {stk.category === 'mundo' ? stk.tag : '⭐ ÉPICO'}
+                      {stk.category === 'mundo' ? stk.tag : '⭐ SECRETO'}
                     </span>
                   ) : (
                     <span className="absolute top-1.5 right-1.5 bg-[#ba1a1a] text-white text-[9px] font-black px-1.5 py-0.2 rounded-full flex items-center gap-0.5">
@@ -754,6 +801,7 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
         <div className="flex flex-col gap-4">
           {/* 1. Minijuego: Rasca y Descubre */}
           <section className="bg-white rounded-3xl p-4 shadow-[0_8px_0_0_#ffdbcc] border-2 border-[#ffd0bb] flex flex-col gap-3 relative overflow-hidden">
+            {/* Header of Scratch Section */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#f59e0b] to-amber-300 text-[#613b00] flex items-center justify-center shadow-md animate-bounce">
@@ -767,99 +815,159 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
                     </span>
                   </h2>
                   <p className="text-xs text-[#534434] font-semibold">
-                    Usa tu dedo o ratón para raspar la lámina mágica
+                    {currentMystery
+                      ? `Lámina Secreta: Quedan ${availableScratchPrizes.length} por descubrir`
+                      : '¡Colección de láminas completada!'}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 bg-[#6cf8bb]/80 border border-[#00714d]/30 px-3 py-1 rounded-full text-xs font-black text-[#00714d] shadow-sm">
-                <span>¡{scratchProgress}% Rascado!</span>
-              </div>
-            </div>
-
-            {/* Interactive Scratch Canvas Area */}
-            <div
-              onMouseDown={() => setIsScratching(true)}
-              onMouseUp={() => setIsScratching(false)}
-              onTouchStart={() => setIsScratching(true)}
-              onTouchEnd={() => setIsScratching(false)}
-              className="relative w-full h-64 rounded-2xl overflow-hidden shadow-inner border-2 border-[#f59e0b]/60 bg-gradient-to-b from-amber-50 via-orange-50 to-emerald-50 flex items-center justify-center select-none touch-none"
-            >
-              {/* Sticker Revealed Underneath */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center z-10 select-none">
-                <div className="relative w-28 h-28 rounded-3xl bg-gradient-to-br from-amber-200 via-emerald-100 to-sky-200 p-1.5 shadow-[0_12px_24px_rgba(245,158,11,0.35)] ring-4 ring-white animate-float-gentle flex items-center justify-center">
-                  <div className="w-full h-full rounded-2xl bg-white/80 flex flex-col items-center justify-center relative overflow-hidden backdrop-blur-xs">
-                    <span className="text-6xl filter drop-shadow-[0_6px_8px_rgba(133,83,0,0.3)]">
-                      {currentMystery.emoji}
-                    </span>
-                    <span className="absolute -bottom-0.5 bg-gradient-to-r from-[#006c49] to-emerald-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md uppercase tracking-wider">
-                      ¡3D HINCHADO!
-                    </span>
-                  </div>
-                </div>
-
-                <h3 className="text-lg leading-tight text-[#351000] font-black mt-2.5 mb-0 flex items-center gap-1.5">
-                  <span>{currentMystery.name}</span>
-                  <span className="text-sm">🌟</span>
-                </h3>
-                <p className="text-xs font-bold text-[#00714d] bg-[#6cf8bb]/70 border border-[#4edea3] px-3 py-1 rounded-full mt-1 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]">volume_up</span>
-                  <span>{currentMystery.phoneme}</span>
-                </p>
-              </div>
-
-              {/* HTML5 Scratch Canvas (Overlaid) */}
-              <canvas
-                ref={scratchCanvasRef}
-                width={360}
-                height={256}
-                onMouseMove={handleScratchMove}
-                onTouchMove={handleScratchMove}
-                className="absolute inset-0 z-20 w-full h-full cursor-pointer touch-none"
-              />
-
-              {/* Hand Hint on 0% progress */}
-              {scratchProgress < 10 && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none flex flex-col items-center animate-pulse">
-                  <div className="w-11 h-11 rounded-full bg-white/95 shadow-lg border-2 border-[#f59e0b] flex items-center justify-center text-[#f59e0b]">
-                    <span className="material-symbols-outlined text-[26px]">touch_app</span>
-                  </div>
-                  <div className="mt-1 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm text-xs font-black text-[#351000]">
-                    ¡Rasca con tu dedo! 👆✨
-                  </div>
+              {currentMystery && (
+                <div className="flex items-center gap-1 bg-[#6cf8bb]/80 border border-[#00714d]/30 px-3 py-1 rounded-full text-xs font-black text-[#00714d] shadow-sm">
+                  <span>¡{scratchProgress}% Rascado!</span>
                 </div>
               )}
+            </div>
 
-              {/* Bottom Action Strip on Scratch Card */}
-              <div className="absolute bottom-2.5 left-3 right-3 z-35 flex items-center gap-2">
+            {/* If NO more prizes are available, show celebratory completion card */}
+            {!currentMystery ? (
+              <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-emerald-50 rounded-2xl p-6 border-2 border-[#6cf8bb] flex flex-col items-center text-center gap-3 shadow-inner">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#f59e0b] to-amber-300 text-5xl flex items-center justify-center shadow-lg animate-bounce">
+                  🏆
+                </div>
+                <h3 className="text-lg text-[#351000] font-black leading-tight">
+                  ¡Colección de Rasca y Descubre Completa! 🎉
+                </h3>
+                <p className="text-xs font-semibold text-[#534434] max-w-sm leading-relaxed">
+                  ¡Increíble trabajo! Has descubierto y rascado todos los stickers secretos.
+                  <br />
+                  <strong className="text-[#006c49] font-black text-sm">
+                    No hay más láminas disponibles por ahora.
+                  </strong>
+                  <br />
+                  ¡Sigue explorando mundos para ganar más estrellitas y medallas!
+                </p>
+                <div className="bg-white px-4 py-1.5 rounded-full border border-[#6cf8bb] shadow-sm text-xs font-black text-[#006c49] flex items-center gap-1.5 mt-1">
+                  <span className="material-symbols-outlined text-[18px]">verified</span>
+                  <span>¡12 de 12 Stickers Secretos en tu Álbum!</span>
+                </div>
                 <button
-                  onClick={handleClaimScratch}
-                  disabled={scratchClaimed}
-                  className={`flex-1 h-12 rounded-full text-white text-xs font-black flex items-center justify-center gap-2 shadow-[0_4px_0_0_#005236] active:translate-y-0.5 transition-all cursor-pointer ${
-                    scratchClaimed
-                      ? 'bg-[#00714d] opacity-90'
-                      : 'bg-gradient-to-r from-[#006c49] to-emerald-600 hover:brightness-105'
-                  }`}
+                  onClick={() => setActiveTab('album')}
+                  className="mt-2 w-full max-w-xs h-12 rounded-2xl bg-[#006c49] hover:bg-[#00714d] text-white text-xs font-black flex items-center justify-center gap-2 shadow-[0_4px_0_0_#005236] active:translate-y-1 transition-all cursor-pointer border border-[#005236]"
                   type="button"
                 >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {scratchClaimed ? 'check_circle' : 'auto_awesome'}
-                  </span>
-                  <span>
-                    {scratchClaimed ? '¡Pegado en tu Álbum! (+50 ⭐)' : '✨ ¡Reclamar Sticker y Ganar +50 ⭐!'}
-                  </span>
-                </button>
-
-                <button
-                  onClick={handleResetScratch}
-                  className="w-12 h-12 rounded-full bg-white text-[#855300] flex items-center justify-center shadow-[0_3px_0_0_#ffd0bb] active:translate-y-0.5 transition-transform border border-[#ffd0bb] shrink-0 cursor-pointer"
-                  title="Rascar otra lámina"
-                  type="button"
-                >
-                  <span className="material-symbols-outlined text-[22px]">casino</span>
+                  <span className="material-symbols-outlined text-[18px]">menu_book</span>
+                  <span>Ver mi Álbum de Stickers 📖</span>
                 </button>
               </div>
-            </div>
+            ) : (
+              /* Scratch Play Area: 100% CLEAN, ZERO BUTTONS BLOCKING CANVAS */
+              <div className="flex flex-col gap-3">
+                <div className="relative w-full h-64 rounded-2xl overflow-hidden shadow-inner border-2 border-[#f59e0b]/60 bg-gradient-to-b from-amber-50 via-orange-50 to-emerald-50 flex items-center justify-center select-none touch-none">
+                  {/* Secret Sticker Revealed Underneath (Z-0) */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center z-0 select-none">
+                    <div className="relative w-28 h-28 rounded-3xl bg-gradient-to-br from-amber-200 via-emerald-100 to-sky-200 p-1.5 shadow-[0_12px_24px_rgba(245,158,11,0.35)] ring-4 ring-white animate-float-gentle flex items-center justify-center">
+                      <div className="w-full h-full rounded-2xl bg-white/80 flex flex-col items-center justify-center relative overflow-hidden backdrop-blur-xs">
+                        <span className="text-6xl filter drop-shadow-[0_6px_8px_rgba(133,83,0,0.3)]">
+                          {currentMystery.emoji}
+                        </span>
+                        <span className="absolute -bottom-0.5 bg-gradient-to-r from-[#006c49] to-emerald-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md uppercase tracking-wider">
+                          {currentMystery.tag}
+                        </span>
+                      </div>
+                    </div>
+
+                    <h3 className="text-lg leading-tight text-[#351000] font-black mt-2.5 mb-0 flex items-center gap-1.5">
+                      <span>{currentMystery.name}</span>
+                      <span className="text-sm">🌟</span>
+                    </h3>
+                    <p className="text-xs font-bold text-[#00714d] bg-[#6cf8bb]/70 border border-[#4edea3] px-3 py-1 rounded-full mt-1 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">volume_up</span>
+                      <span>{currentMystery.phoneme}</span>
+                    </p>
+                  </div>
+
+                  {/* HTML5 Scratch Canvas (Z-10, Clean, Unobstructed) */}
+                  <canvas
+                    ref={scratchCanvasRef}
+                    width={360}
+                    height={256}
+                    onMouseDown={(e) => {
+                      setIsScratching(true);
+                      handleScratchMove(e);
+                    }}
+                    onMouseMove={handleScratchMove}
+                    onMouseUp={() => setIsScratching(false)}
+                    onMouseLeave={() => setIsScratching(false)}
+                    onTouchStart={(e) => {
+                      setIsScratching(true);
+                      handleScratchMove(e);
+                    }}
+                    onTouchMove={handleScratchMove}
+                    onTouchEnd={() => setIsScratching(false)}
+                    className={`absolute inset-0 z-10 w-full h-full cursor-pointer touch-none transition-opacity duration-300 ${
+                      scratchClaimed ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                    }`}
+                  />
+                </div>
+
+                {/* ACTION AREA OUTSIDE OF THE CANVAS (Never blocks scratching!) */}
+                <div className="flex flex-col gap-2 pt-1">
+                  {!scratchClaimed ? (
+                    scratchProgress < 45 ? (
+                      <div className="flex items-center justify-between gap-2 bg-[#ffeae1] px-4 py-3 rounded-2xl border border-[#ffd0bb]">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#f59e0b] text-[22px] animate-pulse">touch_app</span>
+                          <span className="text-xs font-bold text-[#534434]">
+                            Rasca la lámina con tu dedo para descubrir el premio ({scratchProgress}%)
+                          </span>
+                        </div>
+                        <button
+                          onClick={handleRevealCard}
+                          className="px-3 py-1.5 rounded-full bg-white text-[#855300] text-xs font-bold shadow-xs border border-[#ffd0bb] active:scale-95 cursor-pointer shrink-0"
+                          type="button"
+                          title="Revelar lámina"
+                        >
+                          ✨ Revelar
+                        </button>
+                      </div>
+                    ) : (
+                      /* Ready to Claim Button! Appears only when scratched >= 45% */
+                      <button
+                        onClick={handleClaimScratch}
+                        className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#006c49] via-emerald-500 to-[#006c49] hover:brightness-105 text-white text-base font-black flex items-center justify-center gap-2 shadow-[0_5px_0_0_#005236] active:translate-y-1 transition-all cursor-pointer border border-emerald-400 animate-bounce"
+                        type="button"
+                      >
+                        <span className="material-symbols-outlined text-[24px]">auto_awesome</span>
+                        <span>✨ ¡RECLAMAR STICKER Y GANAR +50 ⭐!</span>
+                      </button>
+                    )
+                  ) : (
+                    /* Claimed State: Advances to Next Card! */
+                    <div className="flex flex-col gap-2 animate-in fade-in duration-300">
+                      <div className="flex items-center justify-between bg-emerald-50 border-2 border-[#006c49] p-3 rounded-2xl">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#006c49] text-[24px]">check_circle</span>
+                          <span className="text-xs font-black text-[#006c49]">
+                            ¡{currentMystery.name} pegado en tu Álbum! (+50 ⭐)
+                          </span>
+                        </div>
+                        <span className="text-xs font-bold text-[#855300]">⭐ +50</span>
+                      </div>
+
+                      <button
+                        onClick={handleNextCard}
+                        className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#f59e0b] via-amber-400 to-[#f59e0b] hover:brightness-105 text-[#451a03] text-base font-black flex items-center justify-center gap-2 shadow-[0_5px_0_0_#d97706] active:translate-y-1 transition-all cursor-pointer border border-amber-300"
+                        type="button"
+                      >
+                        <span>🎁 ¡Pasar a la Siguiente Lámina Mágica!</span>
+                        <span className="material-symbols-outlined text-[24px]">arrow_forward</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </section>
 
           {/* 2. Minijuego: Cofre Sorpresa de Estrellas */}

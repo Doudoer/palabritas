@@ -264,7 +264,7 @@ export const CHISPITA_COSTUMES: ChispitaCostume[] = [
 export const SPECIAL_MYSTERY_STICKERS: StickerItem[] = [
   {
     id: 'spec-dragon',
-    name: 'Super Dragón',
+    name: 'Super Dragón Lector',
     emoji: '🐉',
     phoneme: '/DRA-GÓN/',
     tag: 'Legendario',
@@ -273,7 +273,7 @@ export const SPECIAL_MYSTERY_STICKERS: StickerItem[] = [
     description: 'Vuela entre nubes de libros mágicos y echa chispas doradas',
     colorBg: '#fef3c7',
     colorBorder: '#f59e0b',
-    stuck: true,
+    stuck: false,
   },
   {
     id: 'spec-unicornio',
@@ -287,7 +287,6 @@ export const SPECIAL_MYSTERY_STICKERS: StickerItem[] = [
     colorBg: '#fce7f3',
     colorBorder: '#ec4899',
     stuck: false,
-    isNew: true,
   },
   {
     id: 'spec-cohete',
@@ -300,7 +299,7 @@ export const SPECIAL_MYSTERY_STICKERS: StickerItem[] = [
     description: 'Viaja a la velocidad de la luz hacia las letras lejanas',
     colorBg: '#e0f2fe',
     colorBorder: '#38bdf8',
-    stuck: true,
+    stuck: false,
   },
   {
     id: 'spec-leon',
@@ -313,7 +312,7 @@ export const SPECIAL_MYSTERY_STICKERS: StickerItem[] = [
     description: 'El rey sabio de todas las lecturas del reino',
     colorBg: '#ffedd5',
     colorBorder: '#fb923c',
-    stuck: true,
+    stuck: false,
   },
   {
     id: 'spec-mago',
@@ -327,11 +326,10 @@ export const SPECIAL_MYSTERY_STICKERS: StickerItem[] = [
     colorBg: '#ede9fe',
     colorBorder: '#a855f7',
     stuck: false,
-    isNew: true,
   },
   {
     id: 'spec-dino',
-    name: 'Dino Lector T-Rex',
+    name: 'Dino Poeta T-Rex',
     emoji: '🦖',
     phoneme: '/DI-NO/',
     tag: 'Mágico',
@@ -341,7 +339,6 @@ export const SPECIAL_MYSTERY_STICKERS: StickerItem[] = [
     colorBg: '#dcfce7',
     colorBorder: '#22c55e',
     stuck: false,
-    isNew: true,
   },
   {
     id: 'spec-estrella',
@@ -355,7 +352,6 @@ export const SPECIAL_MYSTERY_STICKERS: StickerItem[] = [
     colorBg: '#fef9c3',
     colorBorder: '#eab308',
     stuck: false,
-    isNew: true,
   },
   {
     id: 'spec-robot',
@@ -369,15 +365,63 @@ export const SPECIAL_MYSTERY_STICKERS: StickerItem[] = [
     colorBg: '#f1f5f9',
     colorBorder: '#94a3b8',
     stuck: false,
-    isNew: true,
+  },
+  {
+    id: 'spec-delfin',
+    name: 'Delfín Melódico',
+    emoji: '🐬',
+    phoneme: '/DEL-FÍN/',
+    tag: 'Mágico',
+    rarity: 'Mágico',
+    category: 'legendario',
+    description: 'Nada entre olas de canciones y rimas marinas',
+    colorBg: '#e0f2fe',
+    colorBorder: '#0284c7',
+    stuck: false,
+  },
+  {
+    id: 'spec-panda',
+    name: 'Panda Sabio',
+    emoji: '🐼',
+    phoneme: '/PAN-DA/',
+    tag: 'Mágico',
+    rarity: 'Mágico',
+    category: 'especial',
+    description: 'Medita leyendo sílabas bajo el bosque de bambú',
+    colorBg: '#f3f4f6',
+    colorBorder: '#4b5563',
+    stuck: false,
+  },
+  {
+    id: 'spec-castillo',
+    name: 'Castillo de Letras',
+    emoji: '🏰',
+    phoneme: '/CAS-TI-LLO/',
+    tag: 'Legendario',
+    rarity: 'Legendario',
+    category: 'especial',
+    description: 'Fortaleza dorada donde descansan los grandes cuentos',
+    colorBg: '#fef3c7',
+    colorBorder: '#b45309',
+    stuck: false,
+  },
+  {
+    id: 'spec-ovni',
+    name: 'Platillo Galáctico',
+    emoji: '🛸',
+    phoneme: '/PLA-TI-LLO/',
+    tag: 'Épico',
+    rarity: 'Épico',
+    category: 'legendario',
+    description: 'Explora planetas desconocidos de palabras raras',
+    colorBg: '#e0e7ff',
+    colorBorder: '#6366f1',
+    stuck: false,
   },
 ];
 
 export const INITIAL_STICKERS: StickerItem[] = [
   { id: 'stk-world-1', name: 'Avión Mágico', emoji: '✈️', phoneme: '/A-VIÓN/', tag: 'Mundo 1', category: 'mundo', colorBg: '#ffddb8', colorBorder: '#ffb95f', stuck: true, worldId: 1 },
-  { id: 'stk-1', name: 'Sol Alegre', emoji: '☀️', phoneme: '/SOL/', tag: 'Brillante', category: 'especial', colorBg: '#ffddb8', colorBorder: '#ffb95f', stuck: true },
-  { id: 'stk-2', name: 'Rana Saltarina', emoji: '🐸', phoneme: '/RA-NA/', tag: 'Saltarina', category: 'especial', colorBg: '#6ffbbe', colorBorder: '#4edea3', stuck: true },
-  { id: 'spec-dragon', name: 'Super Dragón', emoji: '🐉', phoneme: '/DRA-GÓN/', tag: 'Legendario', category: 'legendario', colorBg: '#fef3c7', colorBorder: '#f59e0b', stuck: true },
 ];
 
 export const PENDING_STICKERS: StickerItem[] = [

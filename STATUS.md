@@ -1,22 +1,21 @@
 # 📋 Palabritas - Registro de Estado y Checkpoints (STATUS)
 
 > **Documento Vivo de Estado, Arquitectura, Pruebas y Despliegues Continuos.**  
-> **Última Actualización:** 18 de Octubre, 2026 (02:15 UTC-4)  
+> **Última Actualización:** 18 de Octubre, 2026 (14:25 UTC-4)  
 > **Repositorio Oficial:** [https://github.com/Doudoer/palabritas](https://github.com/Doudoer/palabritas)  
 > **Servidor en Producción:** `http://167.235.21.59` (Nginx 1.27.5 en Docker)
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.9 - Rediseño Integral de Recompensas y Premios (Álbum Dinámico de Mundos, Rasca y Descubre, Cofre Sorpresa, Medallas y Tienda de Disfraces)`
-- **Hash de Commit:** `77abf0a` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
-- **Estado General:** ✅ Producción Estable. Se modernizó y transformó completamente la pestaña de **Premios y Recompensas**:
-  1. **Mi Álbum Mágico:** Conectado dinámicamente con los 29 mundos del abecedario en `WORLDS_DATA` y stickers especiales. Cada mundo completado desbloquea su sticker exclusivo con su emoji, fonema y palabra ancla. Al tocar cualquier sticker desbloqueado, se reproduce animación 3D, confeti, sonido de arpegio y pronunciación fonética clara en español.
-  2. **Minijuego "Rasca y Descubre":** Lienzo interactivo holográfico que inicia al 0% y permite raspar con el dedo o ratón, con cálculo en tiempo real del porcentaje, sonidos de raspado, háptica y botón para reclamar el sticker descubierto y ganar +50 estrellas.
-  3. **Cofre Sorpresa de Estrellas:** Minijuego de apertura de cofre por 30 estrellas doradas con sacudida 3D, lluvia de confeti y recompensas de stickers sorpresa coleccionables.
-  4. **Tienda de Disfraces de Chispita:** Sección donde los niños pueden canjear sus estrellas por accesorios divertidos (Corona de Oro 👑, Sombrero de Mago 🧙, Gafas de Explorador 🥽, Casco Espacial 🚀, Corona de Flores 🌺, Capa de Superhéroe 🦸). Al equipar un accesorio, Chispita lo luce en su avatar en toda la aplicación con voz y animación.
-  5. **Medallas de Honor Fonético:** Trofeos calculados en tiempo real con datos auténticos del progreso del jugador (`completedWorlds`, `masteredLetters`, `learnedWords`, `streakDays`, `starsCount`) con barras de avance paso a paso.
-  6. **Gran Cofre de Celebración Personalizado:** El modal de victoria celebra dinámicamente el mundo específico recién completado, eliminando textos genéricos o fijos.
-- **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía (0 fallos) + `tsc --noEmit` limpio + Docker build exitoso.
+## 📌 Checkpoint Actual: `v0.1.10 - Corrección Integral del Rascador de Premios (Lienzo Libre de Obstáculos, Secuencia Progresiva y Estado de Colección Completa)`
+- **Hash de Commit:** `9a66b4f` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
+- **Estado General:** ✅ Producción Estable. Se corrigió integralmente la experiencia de usuario del minijuego **"Rasca y Descubre"** en [src/components/PremiosScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/PremiosScreen.tsx):
+  1. **Lienzo 100% Despejado (Sin Botones Superpuestos):** Se retiró el botón que estaba montado sobre el canvas en `absolute bottom-2.5 z-35`, el cual bloqueaba el tercio inferior del área de raspado. Toda la botonera de interacción ahora reside limpiamente debajo del contenedor del rascador.
+  2. **Eliminación del Bucle Fijo del Dragón:** Se eliminó `spec-dragon` del progreso inicial por defecto en [src/utils/playerProgress.ts](file:///Users/user/Desktop/palabritas%20v0.1/src/utils/playerProgress.ts). Además, el rascador ahora calcula dinámicamente `availableScratchPrizes = SPECIAL_MYSTERY_STICKERS.filter(p => !progress.unlockedStickers.includes(p.id))`, garantizando que únicamente aparezcan láminas de stickers que el niño **aún no ha desbloqueado**.
+  3. **Flujo de Progresión Secuencial:** Al raspar la lámina (≥ 45%), se activa el botón visible `✨ ¡RECLAMAR STICKER Y GANAR +50 ⭐!`. Al reclamarlo, se suma el sticker al álbum, se otorgan las 50 estrellas y se presenta inmediatamente el botón `🎁 ¡Pasar a la Siguiente Lámina Mágica! ➔` para continuar descubriendo nuevos premios uno tras otro sin atascarse.
+  4. **Catálogo de Premios Misteriosos Ampliado:** Se expandió [src/data/appData.ts](file:///Users/user/Desktop/palabritas%20v0.1/src/data/appData.ts) a 12 stickers coleccionables únicos (Dragón, Unicornio, Cohete, León, Chispita Hechicera, Dino, Estrella, Robot, Delfín, Panda, Castillo, OVNI).
+  5. **Pantalla de "No hay más láminas disponibles por ahora":** Cuando el jugador desbloquea todas las láminas del catálogo, la sección muestra una tarjeta festiva de felicitación con trofeo 🏆 y mensaje claro indicando que se completó la colección por ahora y motivando a seguir explorando los mundos para obtener más stickers.
+- **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía (0 fallos) + `tsc --noEmit` limpio + Vite build completado exitosamente.
 
 ---
 
