@@ -7,9 +7,9 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.3 - Fix Repasar Lección, Error Boundary & Blindaje con tsc`
-- **Hash de Commit:** `b41b7e1` (y posteriores)
-- **Estado General:** ✅ Producción Estable, Pantalla en Blanco Resuelta, Compilación y Tipado 100% Blindados.
+## 📌 Checkpoint Actual: `v0.1.4 - Invalidación de Caché PWA, Workbox SkipWaiting y Auto-Update`
+- **Hash de Commit:** `83e4960` (y posteriores)
+- **Estado General:** ✅ Producción Estable, Caché PWA invalidada automáticamente, Contenedores local y VPS recreados con nuevo bundle (`index-L9U1XrvF.js`).
 - **Pruebas Automatizadas:** 4,500 aserciones ejecutadas (0 errores, 0 advertencias) + `tsc --noEmit` en pipeline.
 
 ---
@@ -83,6 +83,18 @@
   3. **Sincronización de Sub-Pestaña en [src/components/PalabrasScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/PalabrasScreen.tsx):** Se añadió sincronización reactiva de `initialSubTab` con `useEffect`.
   4. **Protección con `ErrorBoundary` en [src/components/ErrorBoundary.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/ErrorBoundary.tsx):** Se implementó un límite de errores React con temática infantil y Chispita, garantizando que ante cualquier excepción imprevista el niño o padre vea una interfaz amigable con botón "Volver al Mapa de Mundos" en lugar de una pantalla en blanco.
   5. **Blindaje del Script de Build:** Se actualizó `package.json` para encadenar `tsc --noEmit && vite build`, asegurando que el compilador de TypeScript atrape cualquier error de tipado o variable no declarada antes de generar los artefactos de producción y en CI/CD.
+
+### Paso 8: Invalidación Agresiva de Caché PWA y Recreación de Contenedores
+- **Causa Raíz de la Persistencia del Error en Navegador:**
+  - En la captura del navegador se observó el archivo compilado `index-DiiuX_-U.js` (versión anterior previa al fix). Dicho archivo ya no existía en el servidor.
+  - Esto se debió a dos factores:
+    1. El Service Worker de PWA (`sw.js`) tenía `skipWaiting: false` y `clientsClaim: false` por defecto, reteniendo el bundle antiguo en el almacenamiento `CacheStorage` de Google Chrome.
+    2. En la máquina local, el contenedor `palabritas-app` llevaba 10 horas activo con la imagen matutina sin haber sido recreado con `docker compose up -d --force-recreate`.
+- **Solución Implementada:**
+  1. **Configuración de Workbox en [vite.config.ts](file:///Users/user/Desktop/palabritas%20v0.1/vite.config.ts):** Se activaron `skipWaiting: true`, `clientsClaim: true` y `cleanupOutdatedCaches: true`.
+  2. **Auto-Recarga en [src/main.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/main.tsx):** Se configuró `onNeedRefresh() => updateSW(true)` para que el navegador actualice de forma inmediata y automática cuando detecte una nueva versión del juego.
+  3. **Cabeceras HTTP en [nginx.conf](file:///Users/user/Desktop/palabritas%20v0.1/nginx.conf):** Se añadieron cabeceras `Cache-Control: no-store, no-cache, must-revalidate, max-age=0` tanto a `/` (`index.html`) como a `sw.js` y `workbox-*.js`, evitando que los navegadores mantengan HTMLs apuntando a hashes viejos.
+  4. **Recreación Total de Contenedores:** Reconstrucción limpia y reinicio con el nuevo bundle `index-L9U1XrvF.js` tanto en la máquina local (`localhost:3000`) como en el VPS Hetzner (`167.235.21.59`).
 
 ---
 
