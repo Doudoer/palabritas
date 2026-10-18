@@ -257,8 +257,34 @@ export const TrazosScreen: React.FC<TrazosScreenProps> = ({
     triggerHaptic(15);
     const currentPosInFiltered = filteredAlphabet.findIndex(m => m.originalIndex === selectedLetterIndex);
     if (currentPosInFiltered !== -1) {
-      const nextPos = (currentPosInFiltered + 1) % filteredAlphabet.length;
-      handleSelectLetter(filteredAlphabet[nextPos].originalIndex);
+      if (currentPosInFiltered < filteredAlphabet.length - 1) {
+        // Siguiente letra en el mismo caso (mayúscula o minúscula)
+        const nextPos = currentPosInFiltered + 1;
+        handleSelectLetter(filteredAlphabet[nextPos].originalIndex);
+      } else {
+        // Llegó al final del grupo de letras
+        if (isUppercase) {
+          // Pasamos a las minúsculas
+          playFanfare();
+          setIsUppercase(false);
+          handleSelectLetter(filteredAlphabet[0].originalIndex);
+          speakSpanish('¡Completaste las mayúsculas! ¡Ahora vamos a trazar las minúsculas!');
+        } else {
+          // Completó todas las mayúsculas y minúsculas!
+          playFanfare();
+          playSparkleChime();
+          onAddStars(20);
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#6cf8bb', '#f59e0b', '#42bbff', '#f87171'],
+          });
+          speakSpanish('¡Felicidades! ¡Completaste todos los trazos en mayúscula y minúscula con éxito!');
+          setIsUppercase(true);
+          handleSelectLetter(filteredAlphabet[0].originalIndex);
+        }
+      }
     } else if (filteredAlphabet.length > 0) {
       handleSelectLetter(filteredAlphabet[0].originalIndex);
     }

@@ -10,6 +10,7 @@ import { PalabrasScreen } from './components/PalabrasScreen';
 import { TrazosScreen } from './components/TrazosScreen';
 import { PremiosScreen } from './components/PremiosScreen';
 import { CuentosScreen } from './components/CuentosScreen';
+import { MundoAdventureScreen } from './components/MundoAdventureScreen';
 import { ParentalGateModal } from './components/ParentalGateModal';
 import { PedagogicalReportModal } from './components/PedagogicalReportModal';
 import { PhonicsSessionModal } from './components/PhonicsSessionModal';
@@ -26,11 +27,15 @@ import {
   PlayerProgress,
 } from './utils/playerProgress';
 
-export type NavigationTab = 'mundos' | 'trazos' | 'palabras' | 'cuentos' | 'premios';
+export type NavigationTab = 'mundos' | 'cuentos' | 'premios' | 'trazos' | 'palabras';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('mundos');
   const [palabrasSubTab, setPalabrasSubTab] = useState<'construye' | 'escribe'>('construye');
+
+  // Active World Adventure State (Full 4-Station Flow)
+  const [activeAdventureWorldId, setActiveAdventureWorldId] = useState<number | null>(null);
+  const [activeAdventureStep, setActiveAdventureStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Persistent Player Progress State
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>(() => loadPlayerProgress());
@@ -212,45 +217,51 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative w-full pt-22 pb-24 px-4 max-w-xl mx-auto">
-        <ErrorBoundary onReset={() => handleTabChange('mundos')}>
+        <ErrorBoundary onReset={() => { setActiveAdventureWorldId(null); handleTabChange('mundos'); }}>
           {activeTab === 'mundos' && (
-            <MundosScreen
-              onStartWordGame={handleStartWordGame}
-              onOpenStory={() => handleTabChange('cuentos')}
-              onOpenTracing={handleOpenTracing}
-              onOpenWriting={handleOpenWriting}
-              onOpenRewards={() => handleTabChange('premios')}
-              onOpenPhonicsSession={() => setIsPhonicsSessionOpen(true)}
-              completedWorlds={playerProgress.completedWorlds}
-            />
-          )}
-
-          {activeTab === 'trazos' && (
-            <TrazosScreen
-              onBackToMap={() => handleTabChange('mundos')}
-              onAddStars={handleAddStars}
-              initialLetter={selectedLetter}
-              initialFilter={letterFilter}
-            />
-          )}
-
-          {activeTab === 'palabras' && (
-            <PalabrasScreen
-              onBackToMap={() => handleTabChange('mundos')}
-              onOpenCelebration={() => setIsCelebrationModalOpen(true)}
-              onAddStars={handleAddStars}
-              initialSubTab={palabrasSubTab}
-              initialLetterIndex={selectedLetterIndex}
-              initialWritingLetter={selectedWritingLetter}
-              initialFilter={letterFilter}
-              currentWorldId={playerProgress.currentWorldId}
-              onCompleteWorld={handleCompleteWorld}
-            />
+            activeAdventureWorldId !== null ? (
+              <MundoAdventureScreen
+                worldId={activeAdventureWorldId}
+                initialStep={activeAdventureStep}
+                onBackToMap={() => {
+                  setActiveAdventureWorldId(null);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onAddStars={handleAddStars}
+                onCompleteWorld={(worldId) => {
+                  handleCompleteWorld(worldId);
+                }}
+                onNextWorld={(nextId) => {
+                  setActiveAdventureWorldId(nextId);
+                  setActiveAdventureStep(1);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            ) : (
+              <MundosScreen
+                onStartWordGame={handleStartWordGame}
+                onOpenStory={() => handleTabChange('cuentos')}
+                onOpenTracing={handleOpenTracing}
+                onOpenWriting={handleOpenWriting}
+                onOpenRewards={() => handleTabChange('premios')}
+                onOpenPhonicsSession={() => setIsPhonicsSessionOpen(true)}
+                completedWorlds={playerProgress.completedWorlds}
+                onCompleteWorld={handleCompleteWorld}
+                onEnterWorld={(worldId, step = 1) => {
+                  setActiveAdventureWorldId(worldId);
+                  setActiveAdventureStep(step);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            )
           )}
 
           {activeTab === 'cuentos' && (
             <CuentosScreen
-              onBackToMap={() => handleTabChange('mundos')}
+              onBackToMap={() => {
+                setActiveAdventureWorldId(null);
+                handleTabChange('mundos');
+              }}
               onAddStars={handleAddStars}
             />
           )}
@@ -262,25 +273,58 @@ export default function App() {
               onOpenCelebrationModal={() => setIsCelebrationModalOpen(true)}
             />
           )}
+
+          {/* Legacy Direct Links Fallbacks */}
+          {activeTab === 'trazos' && (
+            <TrazosScreen
+              onBackToMap={() => {
+                setActiveAdventureWorldId(null);
+                handleTabChange('mundos');
+              }}
+              onAddStars={handleAddStars}
+              initialLetter={selectedLetter}
+              initialFilter={letterFilter}
+            />
+          )}
+
+          {activeTab === 'palabras' && (
+            <PalabrasScreen
+              onBackToMap={() => {
+                setActiveAdventureWorldId(null);
+                handleTabChange('mundos');
+              }}
+              onOpenCelebration={() => setIsCelebrationModalOpen(true)}
+              onAddStars={handleAddStars}
+              initialSubTab={palabrasSubTab}
+              initialLetterIndex={selectedLetterIndex}
+              initialWritingLetter={selectedWritingLetter}
+              initialFilter={letterFilter}
+              currentWorldId={playerProgress.currentWorldId}
+              onCompleteWorld={handleCompleteWorld}
+            />
+          )}
         </ErrorBoundary>
       </main>
 
-      {/* Fixed Bottom Navigation Dock (5 Kid-Friendly Tactile Tabs) */}
+      {/* Fixed Bottom Navigation Dock (Streamlined 3 Kid-Friendly Tactile Tabs) */}
       <nav className="fixed bottom-0 w-full z-40 pb-safe bg-[#fff1eb]/95 backdrop-blur-xl shadow-[0_-4px_20px_rgba(133,83,0,0.08)] border-t border-[#ffd0bb]/60">
-        <div className="h-20 max-w-xl mx-auto px-2 flex items-center justify-around">
-          {/* 1. Mundos */}
+        <div className="h-20 max-w-xl mx-auto px-4 flex items-center justify-around gap-2">
+          {/* 1. Mundos (Aventuras Guiadas Paso a Paso) */}
           <button
-            onClick={() => handleTabChange('mundos')}
+            onClick={() => {
+              setActiveAdventureWorldId(null);
+              handleTabChange('mundos');
+            }}
             aria-current={activeTab === 'mundos' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
+            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-3 min-h-[58px] transition-all cursor-pointer rounded-2xl ${
               activeTab === 'mundos'
-                ? 'text-[#451a03] font-black scale-105 bg-amber-100/70 border border-amber-300 shadow-[0_3px_0_0_#d97706]'
-                : 'text-[#613b00] hover:text-[#351000]'
+                ? 'text-[#451a03] font-black scale-105 bg-amber-100/80 border-2 border-amber-300 shadow-[0_4px_0_0_#d97706]'
+                : 'text-[#613b00] hover:text-[#351000] hover:bg-white/40'
             }`}
             type="button"
           >
             <span
-              className="material-symbols-outlined text-[26px]"
+              className="material-symbols-outlined text-[30px]"
               style={{
                 color: activeTab === 'mundos' ? '#d97706' : undefined,
                 fontVariationSettings: activeTab === 'mundos' ? "'FILL' 1" : "'FILL' 0",
@@ -288,68 +332,22 @@ export default function App() {
             >
               explore
             </span>
-            <span className="text-[11px] font-black">Mundos</span>
+            <span className="text-xs font-black">Mundos</span>
           </button>
 
-          {/* 2. Trazos */}
-          <button
-            onClick={() => handleTabChange('trazos')}
-            aria-current={activeTab === 'trazos' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
-              activeTab === 'trazos'
-                ? 'text-[#064e3b] font-black scale-105 bg-emerald-100/70 border border-emerald-300 shadow-[0_3px_0_0_#059669]'
-                : 'text-[#613b00] hover:text-[#351000]'
-            }`}
-            type="button"
-          >
-            <span
-              className="material-symbols-outlined text-[26px]"
-              style={{
-                color: activeTab === 'trazos' ? '#059669' : undefined,
-                fontVariationSettings: activeTab === 'trazos' ? "'FILL' 1" : "'FILL' 0",
-              }}
-            >
-              draw
-            </span>
-            <span className="text-[11px] font-black">Trazos</span>
-          </button>
-
-          {/* 3. Palabras (Construye & Escribe) */}
-          <button
-            onClick={() => handleTabChange('palabras')}
-            aria-current={activeTab === 'palabras' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
-              activeTab === 'palabras'
-                ? 'text-[#0369a1] font-black scale-105 bg-sky-100/70 border border-sky-300 shadow-[0_3px_0_0_#0284c7]'
-                : 'text-[#613b00] hover:text-[#351000]'
-            }`}
-            type="button"
-          >
-            <span
-              className="material-symbols-outlined text-[26px]"
-              style={{
-                color: activeTab === 'palabras' ? '#0284c7' : undefined,
-                fontVariationSettings: activeTab === 'palabras' ? "'FILL' 1" : "'FILL' 0",
-              }}
-            >
-              extension
-            </span>
-            <span className="text-[11px] font-black">Palabras</span>
-          </button>
-
-          {/* 4. Cuentos */}
+          {/* 2. Cuentos (Biblioteca de Lectura) */}
           <button
             onClick={() => handleTabChange('cuentos')}
             aria-current={activeTab === 'cuentos' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
+            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-3 min-h-[58px] transition-all cursor-pointer rounded-2xl ${
               activeTab === 'cuentos'
-                ? 'text-[#7e22ce] font-black scale-105 bg-purple-100/70 border border-purple-300 shadow-[0_3px_0_0_#7c3aed]'
-                : 'text-[#613b00] hover:text-[#351000]'
+                ? 'text-[#581c87] font-black scale-105 bg-purple-100/80 border-2 border-purple-300 shadow-[0_4px_0_0_#7c3aed]'
+                : 'text-[#613b00] hover:text-[#351000] hover:bg-white/40'
             }`}
             type="button"
           >
             <span
-              className="material-symbols-outlined text-[26px]"
+              className="material-symbols-outlined text-[30px]"
               style={{
                 color: activeTab === 'cuentos' ? '#7c3aed' : undefined,
                 fontVariationSettings: activeTab === 'cuentos' ? "'FILL' 1" : "'FILL' 0",
@@ -357,22 +355,22 @@ export default function App() {
             >
               auto_stories
             </span>
-            <span className="text-[11px] font-black">Cuentos</span>
+            <span className="text-xs font-black">Cuentos</span>
           </button>
 
-          {/* 5. Premios */}
+          {/* 3. Premios (Álbum de Logros y Stickers) */}
           <button
             onClick={() => handleTabChange('premios')}
             aria-current={activeTab === 'premios' ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center flex-1 min-w-[54px] min-h-[54px] transition-all cursor-pointer rounded-2xl ${
+            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-3 min-h-[58px] transition-all cursor-pointer rounded-2xl ${
               activeTab === 'premios'
-                ? 'text-[#c2410c] font-black scale-105 bg-orange-100/70 border border-orange-300 shadow-[0_3px_0_0_#ea580c]'
-                : 'text-[#613b00] hover:text-[#351000]'
+                ? 'text-[#7c2d12] font-black scale-105 bg-orange-100/80 border-2 border-orange-300 shadow-[0_4px_0_0_#ea580c]'
+                : 'text-[#613b00] hover:text-[#351000] hover:bg-white/40'
             }`}
             type="button"
           >
             <span
-              className="material-symbols-outlined text-[26px]"
+              className="material-symbols-outlined text-[30px]"
               style={{
                 color: activeTab === 'premios' ? '#ea580c' : undefined,
                 fontVariationSettings: activeTab === 'premios' ? "'FILL' 1" : "'FILL' 0",
@@ -380,7 +378,7 @@ export default function App() {
             >
               featured_seasonal_and_gifts
             </span>
-            <span className="text-[11px] font-black">Premios</span>
+            <span className="text-xs font-black">Premios</span>
           </button>
         </div>
       </nav>

@@ -7,9 +7,9 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.5 - Sonido de Palabra Formada, Afirmación '¡Correcto!' y Auto-Avance Fluido`
+## 📌 Checkpoint Actual: `v0.1.6 - Arquitectura de Aventura por Mundos, 4 Estaciones Obligatorias y Navegación Simplificada para Niños de 6 y 7 Años`
 - **Hash de Commit:** Pendiente de push a `origin/main`
-- **Estado General:** ✅ Producción Estable. Colocación inmediata de sílaba/letra, pronunciación de la palabra formada (`speakSpanish(word)`), chime musical y afirmación vocal (`"¡Correcto! ¡Muy bien!"`), avance automático de ejercicio y banner festivo con salto rápido.
+- **Estado General:** ✅ Producción Estable. Reestructuración completa orientada a Mundos: Cada mundo cuenta con su aventura guiada lineal de 4 estaciones indispensables (1. Trazos de 4 letras en Mayúscula + 4 en Minúscula sin bucle infinito, 2. Escritura a mano en pauta Montessori, 3. Completación de sílabas con feedback fonético e instantáneo "¡Correcto!", 4. Lección de lectura decodificable). Desbloqueo estricto del mundo siguiente al completar las 4 estaciones. Se simplificó la barra de navegación inferior a 3 botones táctiles intuitivos para niños (Mundos, Cuentos, Premios).
 - **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía completadas (0 fallos) + `tsc --noEmit` limpio + Docker build exitoso.
 
 ---
@@ -106,6 +106,27 @@
   4. **Pase Automático al Siguiente Ejercicio:** Una vez escuchada la confirmación, el juego avanza automáticamente al siguiente reto sin interrumpir al niño con modales invasivos de cuenta regresiva (reservando las pantallas de victoria completa para el fin de la familia de palabras). Además, se añadió un banner festivo inferior con botón directo *"Siguiente ➔"* para saltar de inmediato si el niño lo desea.
   5. **Prevención de Errores Fonéticos:** Si el niño presiona una ficha incorrecta, la ficha tiembla en rojo (`shakingCard`), emite un sonido sutil de error (`playWiggleError()`), la voz le indica qué letra pulsó (`"Esa es TU. Escucha bien e intenta otra vez"`) y el espacio en blanco se mantiene libre para un nuevo intento.
   6. **Prevención de Pérdida de Utterances (Garbage Collection Fix):** Se protegió la instancia de `SpeechSynthesisUtterance` a nivel de módulo en [src/utils/audio.ts](file:///Users/user/Desktop/palabritas%20v0.1/src/utils/audio.ts) con temporizador de seguridad (4s) para garantizar que los callbacks `onend` nunca se pierdan en navegadores móviles (Chrome/Safari).
+
+### Paso 9: Reformulación Completa de la App por Mundos (4 Estaciones Obligatorias) y Fin del Bucle de Trazos
+- **Problemas Solucionados:**
+  1. **Bucle Infinito en Trazos:** En el ejercicio de trazos, tras completar las 4 letras se producía una repetición infinita cíclica en mayúsculas (`% length`), sin avanzar a minúsculas ni terminar la lección.
+  2. **Desconexión Curricular:** Existían pestañas aisladas en la barra inferior ("Trazos", "Palabras", etc.) que confundían y desorientaban a niños de 6 y 7 años, dispersando el aprendizaje sin un hilo conductor.
+- **Acciones y Mejoras Implementadas:**
+  1. **Nueva Pantalla [src/components/MundoAdventureScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/MundoAdventureScreen.tsx):**
+     - Cada mundo se estructura en una aventura guiada y lineal de **4 estaciones pedagógicas secuenciales**:
+       - **Estación 1: Trazos Fonéticos** (4 letras del mundo en MAYÚSCULAS ➔ pasa automáticamente a las 4 letras en MINÚSCULAS = 8 trazos exactos, sin bucle, con fanfarria y +15 estrellas).
+       - **Estación 2: Escritura a Mano de Palabras** (Pauta Montessori en canvas con líneas guía punteadas, crayones de colores y validación caligráfica para escribir la palabra representativa del mundo, ej. "MAMA", "PAPA", "LUNA").
+       - **Estación 3: Completación de Sílabas** (Arena de 6 fichas con colocación instantánea en el espacio en blanco, reproducción fonética de la palabra armada, arpegio de estrellitas, afirmación vocal "¡Correcto! ¡Muy bien!" y pase fluido).
+       - **Estación 4: Lección de Lectura** (Cuento ilustrado decodificable del mundo con resaltado de sílabas y lectura asistida por audio).
+     - **Graduación y Desbloqueo de Mundo:** Al superar las 4 estaciones correctamente, se despliega la pantalla de victoria mágica, se otorgan estrellas, confeti y se desbloquea el siguiente mundo en el mapa (`world.id + 1`).
+  2. **Eliminación del Bucle en [src/components/TrazosScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/TrazosScreen.tsx):**
+     - Se modificó `handleNextLetter` para iterar exactamente por las letras en mayúsculas, transicionar fluidamente a las minúsculas y disparar la fanfarria de completación con estrellas de premio al terminar el abecedario seleccionado.
+  3. **Simplificación Radical de la Navegación para Niños (6–7 Años):**
+     - Se eliminaron las pestañas redundantes y aisladas del dock inferior (`trazos` y `palabras`).
+     - La barra de navegación inferior ahora cuenta únicamente con **3 botones táctiles grandes, coloridos e intuitivos**:
+       - 🗺️ **Mundos**: El camino de aventuras de la A a la Z, donde cada nivel tiene sus 4 estaciones completas.
+       - 📚 **Cuentos**: Biblioteca de lectura para repasar y disfrutar de las historias mágicas ilustradas.
+       - 🏆 **Premios**: Álbum de cromos, stickers y estrellas coleccionables.
 
 ---
 

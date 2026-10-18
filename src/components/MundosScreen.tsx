@@ -20,6 +20,7 @@ interface MundosScreenProps {
   onOpenPhonicsSession: () => void;
   completedWorlds?: number[];
   onCompleteWorld?: (worldId: number) => void;
+  onEnterWorld?: (worldId: number, step?: 1 | 2 | 3 | 4) => void;
 }
 
 export const MundosScreen: React.FC<MundosScreenProps> = ({
@@ -30,6 +31,7 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
   onOpenRewards,
   onOpenPhonicsSession,
   completedWorlds = [1],
+  onEnterWorld,
 }) => {
   const [selectedWorldFilter, setSelectedWorldFilter] = useState<'todos' | 'A-F' | 'G-M' | 'N-S' | 'T-Z' | 'especiales'>('todos');
   const [dailyProgress, setDailyProgress] = useState<DailyProgressState>(() => loadDailyProgress());
@@ -188,7 +190,13 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
             </div>
 
             <button
-              onClick={() => handleOpenWorldModal(activeWorldObj)}
+              onClick={() => {
+                if (onEnterWorld) {
+                  onEnterWorld(activeWorldObj.id, 1);
+                } else {
+                  handleOpenWorldModal(activeWorldObj);
+                }
+              }}
               type="button"
               className="w-full sm:w-auto bg-[#351000] hover:bg-[#561f00] text-amber-300 font-black text-sm px-5 py-3 rounded-2xl shadow-[0_4px_0_0_#000] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
             >
@@ -502,7 +510,11 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
                             playPop(480);
                             triggerHaptic(20);
                             speakSpanish(`Trazando letras de ${world.numberLabel}: ${world.focusLetter}.`);
-                            onOpenTracing(world.focusLetter, world.categoryFilter, world.id);
+                            if (onEnterWorld) {
+                              onEnterWorld(world.id, 1);
+                            } else {
+                              onOpenTracing(world.focusLetter, world.categoryFilter, world.id);
+                            }
                           }}
                           className="flex-1 sm:flex-initial bg-[#6cf8bb] hover:bg-[#4edea3] text-[#00714d] text-xs font-bold px-3 py-2 rounded-full shadow-[0_2px_0_0_#4edea3] active:translate-y-0.5 flex items-center justify-center gap-1 cursor-pointer transition-colors"
                           type="button"
@@ -515,11 +527,15 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
                           onClick={() => {
                             playPop(520);
                             triggerHaptic(20);
-                            speakSpanish(`¡Jugando en ${world.numberLabel}! Palabra: ${world.targetWord}.`);
+                            speakSpanish(`¡Aventura en ${world.numberLabel}! Palabra: ${world.targetWord}.`);
                             if (world.id === totalWorldsCount) {
                               handlePlayFinalCelebration();
                             }
-                            onStartWordGame(world.letterIndex, world.categoryFilter, world.id);
+                            if (onEnterWorld) {
+                              onEnterWorld(world.id, 1);
+                            } else {
+                              onStartWordGame(world.letterIndex, world.categoryFilter, world.id);
+                            }
                           }}
                           className={`flex-1 sm:flex-initial text-xs font-black px-3.5 py-2 rounded-full shadow-[0_3px_0_0_#d97706] active:translate-y-0.5 flex items-center justify-center gap-1 cursor-pointer transition-colors ${
                             isCurrentActive
@@ -605,65 +621,81 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
               </span>
 
               {/* Paso 1: Fonema y Sonido */}
+              {/* Paso 1: Trazos Fonéticos */}
               <button
                 onClick={() => {
-                  playPop(500);
-                  triggerHaptic(20);
-                  speakSpanish(`Paso 1. Fonema de la letra ${selectedModalWorld.focusLetter}. Sonido: ${selectedModalWorld.focusLetter}... Ejemplo: ${selectedModalWorld.targetWord}.`);
+                  const w = selectedModalWorld;
+                  if (!w) return;
+                  setSelectedModalWorld(null);
+                  if (onEnterWorld) {
+                    onEnterWorld(w.id, 1);
+                  } else {
+                    playPop(500);
+                    triggerHaptic(20);
+                    speakSpanish(`Paso 1. Fonema de la letra ${w.focusLetter}. Sonido: ${w.focusLetter}... Ejemplo: ${w.targetWord}.`);
+                  }
                 }}
                 type="button"
                 className="p-3 bg-white hover:bg-amber-50 rounded-2xl border-2 border-amber-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
               >
                 <div className="flex items-center gap-2.5">
                   <span className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 font-black flex items-center justify-center text-lg">
-                    👂
+                    ✍️
                   </span>
                   <div>
                     <span className="text-xs font-black text-[#351000] block">
-                      1. Fonema y Sonido
+                      1. Trazos Mayúscula y Minúscula
                     </span>
                     <span className="text-[11px] text-[#78350f] font-bold">
-                      Escucha cómo suena la letra {selectedModalWorld.focusLetter}
+                      Trazos de las 4 letras del mundo (4 mayúsculas y 4 minúsculas)
                     </span>
                   </div>
                 </div>
-                <span className="material-symbols-outlined text-amber-600">volume_up</span>
+                <span className="material-symbols-outlined text-amber-600">arrow_forward</span>
               </button>
 
-              {/* Paso 2: Trazo Guiado en Pizarra */}
+              {/* Paso 2: Escritura a Mano de Palabras */}
               <button
                 onClick={() => {
                   const w = selectedModalWorld;
                   if (!w) return;
                   setSelectedModalWorld(null);
-                  onOpenTracing(w.focusLetter, w.categoryFilter, w.id);
+                  if (onEnterWorld) {
+                    onEnterWorld(w.id, 2);
+                  } else if (onOpenWriting) {
+                    onOpenWriting(w.focusLetter);
+                  }
                 }}
                 type="button"
                 className="p-3 bg-white hover:bg-emerald-50 rounded-2xl border-2 border-emerald-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
               >
                 <div className="flex items-center gap-2.5">
                   <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 font-black flex items-center justify-center text-lg">
-                    ✍️
+                    📝
                   </span>
                   <div>
                     <span className="text-xs font-black text-[#351000] block">
-                      2. Trazo en la Pizarra
+                      2. Escribe la Palabra a Mano
                     </span>
                     <span className="text-[11px] text-emerald-800 font-bold">
-                      Dibuja la letra con tiza mágica
+                      Pauta caligráfica para escribir "{selectedModalWorld.targetWord}"
                     </span>
                   </div>
                 </div>
                 <span className="material-symbols-outlined text-emerald-600">arrow_forward</span>
               </button>
 
-              {/* Paso 3: Construye y Arma Sílabas */}
+              {/* Paso 3: Construye y Completa Sílabas */}
               <button
                 onClick={() => {
                   const w = selectedModalWorld;
                   if (!w) return;
                   setSelectedModalWorld(null);
-                  onStartWordGame(w.letterIndex, w.categoryFilter, w.id);
+                  if (onEnterWorld) {
+                    onEnterWorld(w.id, 3);
+                  } else {
+                    onStartWordGame(w.letterIndex, w.categoryFilter, w.id);
+                  }
                 }}
                 type="button"
                 className="p-3 bg-white hover:bg-sky-50 rounded-2xl border-2 border-sky-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
@@ -674,44 +706,46 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
                   </span>
                   <div>
                     <span className="text-xs font-black text-[#351000] block">
-                      3. Arma con Sílabas
+                      3. Completa con Sílabas
                     </span>
                     <span className="text-[11px] text-sky-800 font-bold">
-                      Forma la palabra {selectedModalWorld.targetWord}
+                      Completa el espacio y escucha cómo se forma "{selectedModalWorld.targetWord}"
                     </span>
                   </div>
                 </div>
                 <span className="material-symbols-outlined text-sky-600">arrow_forward</span>
               </button>
 
-              {/* Paso 4: Escribe con Teclado */}
-              {onOpenWriting && (
-                <button
-                  onClick={() => {
-                    const w = selectedModalWorld;
-                    if (!w) return;
-                    setSelectedModalWorld(null);
-                    onOpenWriting(w.focusLetter);
-                  }}
-                  type="button"
-                  className="p-3 bg-white hover:bg-purple-50 rounded-2xl border-2 border-purple-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 font-black flex items-center justify-center text-lg">
-                      ⌨️
+              {/* Paso 4: Lección de Lectura */}
+              <button
+                onClick={() => {
+                  const w = selectedModalWorld;
+                  if (!w) return;
+                  setSelectedModalWorld(null);
+                  if (onEnterWorld) {
+                    onEnterWorld(w.id, 4);
+                  } else {
+                    onOpenStory();
+                  }
+                }}
+                type="button"
+                className="p-3 bg-white hover:bg-purple-50 rounded-2xl border-2 border-purple-200 flex items-center justify-between gap-3 shadow-xs cursor-pointer active:scale-98 transition-all text-left"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 font-black flex items-center justify-center text-lg">
+                    📖
+                  </span>
+                  <div>
+                    <span className="text-xs font-black text-[#351000] block">
+                      4. Lección de Lectura
                     </span>
-                    <div>
-                      <span className="text-xs font-black text-[#351000] block">
-                        4. Escribe con Teclado
-                      </span>
-                      <span className="text-[11px] text-purple-800 font-bold">
-                        Teclado fonético y dictado
-                      </span>
-                    </div>
+                    <span className="text-[11px] text-purple-800 font-bold">
+                      Cuento decodificable con audio y lectura guiada
+                    </span>
                   </div>
-                  <span className="material-symbols-outlined text-purple-600">arrow_forward</span>
-                </button>
-              )}
+                </div>
+                <span className="material-symbols-outlined text-purple-600">arrow_forward</span>
+              </button>
             </div>
 
             {/* Quick Play All Button */}
@@ -720,7 +754,11 @@ export const MundosScreen: React.FC<MundosScreenProps> = ({
                 const w = selectedModalWorld;
                 if (!w) return;
                 setSelectedModalWorld(null);
-                onStartWordGame(w.letterIndex, w.categoryFilter, w.id);
+                if (onEnterWorld) {
+                  onEnterWorld(w.id, 1);
+                } else {
+                  onStartWordGame(w.letterIndex, w.categoryFilter, w.id);
+                }
               }}
               type="button"
               className="w-full py-3 bg-[#f59e0b] hover:bg-amber-500 text-[#451a03] font-black rounded-2xl shadow-[0_4px_0_0_#b45309] active:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer mt-1"

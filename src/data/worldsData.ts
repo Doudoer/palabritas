@@ -864,3 +864,69 @@ export const WORLDS_DATA: WorldLevel[] = [
     },
   },
 ];
+
+/**
+ * Retorna exactamente 4 letras representativas para la práctica de trazos
+ * en mayúscula y minúscula de este mundo.
+ */
+export function getWorldTracingLetters(worldId: number): string[] {
+  const world = WORLDS_DATA.find(w => w.id === worldId) || WORLDS_DATA[0];
+  const focus = (world.focusLetter || 'A').toUpperCase();
+
+  // Vocales
+  if (['A', 'E', 'I', 'O', 'U'].includes(focus)) {
+    if (focus === 'A') return ['A', 'E', 'I', 'O'];
+    if (focus === 'E') return ['E', 'A', 'I', 'U'];
+    if (focus === 'I') return ['I', 'O', 'U', 'A'];
+    if (focus === 'O') return ['O', 'U', 'A', 'E'];
+    return ['U', 'A', 'E', 'O'];
+  }
+
+  // Consonantes Iniciales (M, P, S, L)
+  if (['M', 'P', 'S', 'L'].includes(focus)) {
+    const group = ['M', 'P', 'S', 'L'];
+    return [focus, ...group.filter(l => l !== focus)];
+  }
+
+  // Consonantes Dentales / Alveolares (T, D, N, R)
+  if (['T', 'D', 'N', 'R'].includes(focus)) {
+    const group = ['T', 'D', 'N', 'R'];
+    return [focus, ...group.filter(l => l !== focus)];
+  }
+
+  // Velares / Guturales (C, Q, K, G)
+  if (['C', 'Q', 'K', 'G'].includes(focus)) {
+    const group = ['C', 'Q', 'G', 'K'];
+    return [focus, ...group.filter(l => l !== focus)];
+  }
+
+  // Labiales y Fricativas (B, V, F, J)
+  if (['B', 'V', 'F', 'J'].includes(focus)) {
+    const group = ['B', 'V', 'F', 'J'];
+    return [focus, ...group.filter(l => l !== focus)];
+  }
+
+  // Palatales / Sibilantes (Z, X, Y, H)
+  if (['Z', 'X', 'Y', 'H'].includes(focus)) {
+    const group = ['Z', 'X', 'Y', 'H'];
+    return [focus, ...group.filter(l => l !== focus)];
+  }
+
+  // Dígrafos / Especiales
+  if (worldId >= 28) {
+    return ['C', 'L', 'R', 'G'];
+  }
+
+  // Fallback con el abecedario
+  const lettersOrder = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'Ñ', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+  const idx = lettersOrder.indexOf(focus);
+  if (idx !== -1) {
+    const res = [focus];
+    for (let i = 1; i < 4; i++) {
+      res.push(lettersOrder[(idx + i) % lettersOrder.length]);
+    }
+    return res;
+  }
+
+  return ['M', 'P', 'S', 'L'];
+}
