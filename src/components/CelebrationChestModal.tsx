@@ -4,6 +4,8 @@ import { ASSETS } from '../data/appData';
 import { playPop, playSparkleChime, playFanfare, speakSpanish, triggerHaptic } from '../utils/audio';
 import { loadPlayerProgress } from '../utils/playerProgress';
 
+import { RoomCatalogItem } from '../data/avatarRoomData';
+
 interface CelebrationChestModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,6 +18,8 @@ interface CelebrationChestModalProps {
   unlockedStickerName?: string;
   unlockedStickerEmoji?: string;
   learnedWordsList?: string[];
+  newRoomItems?: RoomCatalogItem[];
+  onGoToRoom?: () => void;
 }
 
 export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
@@ -30,6 +34,8 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
   unlockedStickerName,
   unlockedStickerEmoji,
   learnedWordsList,
+  newRoomItems,
+  onGoToRoom,
 }) => {
   const progress = loadPlayerProgress();
   const currentTotalStars = starsCount !== undefined ? starsCount : progress.starsCount;
@@ -210,21 +216,70 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
               </div>
             </div>
           )}
+
+          {/* Recompensa 4: ¡Nuevos Objetos para la Habitación y el Avatar! */}
+          {newRoomItems && newRoomItems.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-100 via-orange-100 to-amber-100 rounded-2xl p-3 shadow-sm flex flex-col gap-2 border-2 border-amber-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#351000] font-black flex items-center gap-1.5">
+                  <span className="text-lg">🏠🎁</span>
+                  <span>¡Premios para tu Habitación!</span>
+                </span>
+                <span className="text-[10px] font-black text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full">
+                  ¡Avatar World!
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {newRoomItems.map(item => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 bg-white/95 p-2 rounded-xl border border-amber-200 shadow-xs"
+                  >
+                    <span className="text-2xl shrink-0">{item.emoji}</span>
+                    <div className="min-w-0">
+                      <span className="text-[11px] font-black text-[#351000] truncate block">
+                        {item.name}
+                      </span>
+                      <span className="text-[9px] text-emerald-700 font-bold block">
+                        ¡Desbloqueado! ✨
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Acciones Finales */}
         <div className="w-full flex flex-col gap-2.5 mt-5">
+          {onGoToRoom && (
+            <button
+              onClick={() => {
+                playPop(480);
+                triggerHaptic(20);
+                onClose();
+                onGoToRoom();
+              }}
+              className="w-full h-14 bg-gradient-to-r from-[#f59e0b] via-amber-400 to-[#f59e0b] hover:from-amber-400 hover:to-amber-500 text-white rounded-2xl text-base font-black shadow-[0_5px_0_0_#d97706] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer border-2 border-amber-300 animate-bounce"
+              type="button"
+            >
+              <span className="text-2xl">🏠</span>
+              <span>¡Ir a Decorar mi Habitación! 🎨</span>
+            </button>
+          )}
+
           <button
             onClick={() => {
               playPop(480);
               triggerHaptic(20);
               onClose();
             }}
-            className="w-full h-14 bg-[#006c49] hover:bg-[#00714d] text-white rounded-2xl text-base font-bold shadow-[0_5px_0_0_#005236] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#005236]"
+            className="w-full h-12 bg-[#006c49] hover:bg-[#00714d] text-white rounded-2xl text-xs font-bold shadow-[0_4px_0_0_#005236] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#005236]"
             type="button"
           >
-            <span className="material-symbols-outlined text-2xl">map</span>
-            <span>¡Guardar y Volver al Mapa! 🗺️</span>
+            <span className="material-symbols-outlined text-xl">map</span>
+            <span>Continuar Aventuras en el Mapa 🗺️</span>
           </button>
 
           <button
@@ -234,7 +289,7 @@ export const CelebrationChestModal: React.FC<CelebrationChestModalProps> = ({
               onClose();
               onGoToAlbum();
             }}
-            className="w-full h-12 bg-[#ffe2d6] hover:bg-[#ffdbcc] text-[#351000] rounded-2xl text-xs font-bold shadow-[0_3px_0_0_#ffd0bb] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#ffd0bb]"
+            className="w-full h-11 bg-[#ffe2d6] hover:bg-[#ffdbcc] text-[#351000] rounded-2xl text-xs font-bold shadow-[0_3px_0_0_#ffd0bb] active:translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#ffd0bb]"
             type="button"
           >
             <span className="material-symbols-outlined text-[#006591] text-[18px]">menu_book</span>

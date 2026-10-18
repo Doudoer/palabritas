@@ -87,6 +87,42 @@ for (let i = 0; i < ALPHABET_DATA.length; i++) {
   assert(Boolean(ALPHABET_DATA[nextIdx]), `Avance de letra ${ALPHABET_DATA[i].letter} a ${ALPHABET_DATA[nextIdx].letter}`);
 }
 
+// Test 4: Avatar World Rewards & Room Customization System
+console.log('\n4. Probando Sistema de Recompensas y Avatar World:');
+import { AVATAR_ROOM_CATALOG, DEFAULT_ROOM_CONFIG, DEFAULT_AVATAR_CONFIG, checkItemUnlockStatus } from '../src/data/avatarRoomData';
+
+assert(AVATAR_ROOM_CATALOG.length >= 40, `El catálogo de Avatar World tiene más de 40 ítems (${AVATAR_ROOM_CATALOG.length} ítems)`);
+
+// Verify empty room defaults
+assert(DEFAULT_ROOM_CONFIG.bed === 'bed-none', 'La habitación comienza sin cama (vacía)');
+assert(DEFAULT_ROOM_CONFIG.desk === 'desk-none', 'La habitación comienza sin escritorio (vacía)');
+assert(DEFAULT_ROOM_CONFIG.rug === 'rug-none', 'La habitación comienza sin alfombra (vacía)');
+assert(DEFAULT_ROOM_CONFIG.pet === 'pet-none', 'La habitación comienza sin mascota (vacía)');
+assert(DEFAULT_ROOM_CONFIG.wallDecor === 'decor-none', 'La habitación comienza sin cuadros (vacía)');
+
+// Verify item unlock rules
+const cloudBed = AVATAR_ROOM_CATALOG.find(i => i.id === 'bed-cloud')!;
+assert(cloudBed.requiredWorldId === 1, 'Cama Nube requiere completar Mundo 1');
+
+// Test unlock check with World 1 completed vs not completed
+const unlockWithMundo1 = checkItemUnlockStatus(cloudBed, [], [1], 0, 0, 0);
+assert(unlockWithMundo1.isUnlocked === true, 'Cama Nube se desbloquea al completar Mundo 1');
+
+const lockWithoutMundo1 = checkItemUnlockStatus(cloudBed, [], [], 0, 0, 0);
+assert(lockWithoutMundo1.isUnlocked === false, 'Cama Nube está bloqueada si no se ha completado Mundo 1');
+
+// Test calligraphy letter count unlocks
+const pencilItem = AVATAR_ROOM_CATALOG.find(i => i.id === 'hand-pencil')!;
+assert(pencilItem.requiredLettersCount === 5, 'Lápiz de oro requiere 5 letras dominadas');
+const unlockPencil = checkItemUnlockStatus(pencilItem, [], [], 5, 0, 0);
+assert(unlockPencil.isUnlocked === true, 'Lápiz de oro se desbloquea con 5 letras');
+
+// Test word writing unlock
+const artDesk = AVATAR_ROOM_CATALOG.find(i => i.id === 'desk-art')!;
+assert(artDesk.requiredWordsCount === 1, 'Caballete de arte requiere escribir palabras');
+const unlockDesk = checkItemUnlockStatus(artDesk, [], [], 0, 1, 0);
+assert(unlockDesk.isUnlocked === true, 'Caballete se desbloquea al escribir 1 palabra');
+
 console.log('\n====================================================');
 console.log(`📊 RESULTADO DE PRUEBAS DE MODO DE JUEGO:`);
 console.log(`Total pruebas: ${testCount}`);

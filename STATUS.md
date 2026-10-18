@@ -7,19 +7,29 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.11 - Corrección Caligráfica del Abecedario (Trazo Natural de Letras Minúsculas, Geometría Escolar y Guías Paso a Paso)`
-- **Hash de Commit:** `efc64bf` (Sincronizado con GitHub `origin/main` y desplegado en VPS `167.235.21.59`)
-- **Estado General:** ✅ Producción Estable. Se corrigió integralmente la geometría y caligrafía de las letras del abecedario en [src/data/alphabetData.ts](file:///Users/user/Desktop/palabritas%20v0.1/src/data/alphabetData.ts), [src/components/MundoAdventureScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/MundoAdventureScreen.tsx) y [src/components/TrazosScreen.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/TrazosScreen.tsx):
-  1. **Rediseño Completo de la Letra 'a' Minúscula:**
-     - **Problema detectado:** El trazo anterior tenía un arco semicircular incompleto que dejaba la letra abierta y un palito vertical que subía hasta y=90 (zona de letras ascendentes), asemejándose a una 'D' invertida o guadaña rota.
-     - **Corrección Caligráfica:** Se implementó la forma clásica escolar de imprenta (método Montessori y caligrafía de primaria): una **bolita redonda perfecta y cerrada** entre la línea media (y=142) y la línea base (y=234), acompañada de un **palito vertical adyacente** a la derecha que desciende de la línea media al suelo con una **suave colita de enlace** (`M 135 142 A 45 46 0 1 0 135 234 A 45 46 0 1 0 135 142 M 180 142 L 180 226 Q 180 236 195 236`).
-  2. **Calibración de Todo el Abecedario en Pauta Montessori:**
-     - Se corrigieron todas las letras minúsculas con cuerpos circulares (`a`, `b`, `d`, `g`, `p`, `q`, `o`) para que tengan barriguitas circulares/ovaladas cerradas y alturas reglamentarias según las 3 líneas Montessori (ascendentes al cielo, medias a la cintura y descendentes al sótano).
-  3. **Guías Numeradas Paso a Paso en Minúsculas:**
-     - Se añadieron `lowerSteps` (puntos guía 1, 2...) para que el infante aprenda el orden motriz natural (ej: en la 'a': 1 = girar la bolita, 2 = bajar el palito).
-  4. **Pistas Pedagógicas en Pantalla y Audio:**
-     - Se añadió un chip visual con la pista pedagógica (`💡 Primero gira la bolita redonda y luego baja el palito con su colita.`) y se vinculó al botón de pronunciación fonética.
-- **Pruebas Automatizadas:** 518 pruebas lógicas y de ortografía (0 fallos) + `tsc --noEmit` limpio + Vite build exitoso.
+## 📌 Checkpoint Actual: `v0.1.12 - Sistema de Recompensas Avatar World (Habitación Interactiva Mágica, Avatar Animado y Recompensas por Misiones de Aprendizaje)`
+- **Hash de Commit:** Pendiente de commit y push a `origin/main`
+- **Estado General:** ✅ Producción Lista. Se transformó integralmente el sistema de recompensas en un espacio inmersivo tipo **Avatar World / Toca Life** especialmente adaptado a la pedagogía de *Palabritas* para niños de 5 a 7 años:
+  1. **Habitación Inicial Vacía ("Mi Habitación Mágica"):**
+     - El infante comienza con una habitación espaciosa y acogedora sin amueblar (paredes crema y suelo de parquet limpios, sin cama, sin escritorio, sin alfombra, sin cuadros y sin mascotas).
+     - Cada rastro de mueble muestra un slot interactivo punteado (`🛏️ + Cama`, `🎨 + Mesa`, `✨ + Alfombra`, `🐾 + Mascota`, `🖼️ + Cuadro`). Al tocar un slot vacío, se despliega directamente el catálogo en esa categoría.
+  2. **Avatar Animado Chibi Interactivo:**
+     - Personaje en SVG detallado con micro-animaciones procedimentales: respiración natural continua (`anim-breathe`), parpadeo de ojos expresivo (`anim-blink`), y saltos de alegría festivos con confeti y corazones (`cheerJump`).
+     - **Personalización Completa:** Tonos de piel infantiles, estilos de cabello (corto aventurero, coletas, rizado, flequillo, cresta, gorrito), colores de pelo (chocolate, dorado, azabache, fuego, rosa, galaxia), expresiones (feliz, guiño pícaro, sorpresa mágica, pequeño genio con gafas, corazoncito dulce), ropitas temáticas, accesorios para la cabeza y objetos para la mano.
+     - **Reacción por Voz en Español:** Al tocar al avatar, saluda y celebra con frases llenas de cariño y entusiasmo fonético.
+  3. **Misiones Pedagógicas de Desbloqueo (Tasks-to-Rewards Loop):**
+     - Catálogo de más de 60 objetos en [src/data/avatarRoomData.ts](file:///Users/user/Desktop/palabritas%20v0.1/src/data/avatarRoomData.ts) categorizados por misiones escolares reales:
+       - **Completar Mundos:** Cama Nube, Gatito Miau, Cama Coche, Galaxia Estelar, Cama Castillo, Mini Dragón Chispita, Cama Cohete Espacial, etc.
+       - **Caligrafía a Mano:** Dominar 3 o 5 letras desbloquea la Gorra Cool, el Póster Gigante del Abecedario con Luces y el Lápiz de Oro.
+       - **Escritura de Palabras:** Escribir palabras a mano desbloquea el Caballete de Pintor ABC, el Traje de Artista, la Alfombra de Osito y el Robotito Beep-Boop.
+       - **Lectura de Cuentos:** Leer cuentos desbloquea la Repisa de Trofeos, el Libro Abierto y los Audífonos Gamer.
+       - **Canje Alternativo con Estrellas Doradas:** Los infantes pueden ahorrar las estrellitas ganadas en sus ejercicios para canjear cualquier ítem anticipadamente.
+  4. **Ventana Celestial Dinámica (Día y Noche):**
+     - La ventana del cuarto permite cambiar entre un día soleado ☀️ con nubes esponjosas y una noche mágica 🌙 con estrellas titilantes y luna brillante.
+  5. **Integración Fluida en la Aplicación:**
+     - El dock inferior renombra la pestaña a **«Mi Cuarto»** con icono de cabaña/habitación (`cottage`).
+     - Al completar un mundo, [src/components/CelebrationChestModal.tsx](file:///Users/user/Desktop/palabritas%20v0.1/src/components/CelebrationChestModal.tsx) muestra tarjetas de los nuevos objetos ganados con el botón directo: *«🏠 ¡Ir a Decorar mi Habitación!»*.
+- **Pruebas Automatizadas:** 531 pruebas lógicas y de ortografía (0 fallos) + `tsc --noEmit` limpio + Vite build exitoso.
 
 ---
 

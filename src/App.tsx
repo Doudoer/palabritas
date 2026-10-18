@@ -26,6 +26,7 @@ import {
   completePlayerWorld,
   PlayerProgress,
 } from './utils/playerProgress';
+import { RoomCatalogItem } from './data/avatarRoomData';
 
 export type NavigationTab = 'mundos' | 'cuentos' | 'premios' | 'trazos' | 'palabras';
 
@@ -52,6 +53,7 @@ export default function App() {
   const [isPhonicsSessionOpen, setIsPhonicsSessionOpen] = useState(false);
   const [isCelebrationModalOpen, setIsCelebrationModalOpen] = useState(false);
   const [celebrationWorldId, setCelebrationWorldId] = useState<number | null>(null);
+  const [celebrationNewRoomItems, setCelebrationNewRoomItems] = useState<RoomCatalogItem[]>([]);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   const equippedCostumeItem = CHISPITA_COSTUMES.find(c => c.id === playerProgress.equippedCostume);
@@ -66,6 +68,7 @@ export default function App() {
     const result = completePlayerWorld(worldId);
     setPlayerProgress(result.updatedProgress);
     setCelebrationWorldId(worldId);
+    setCelebrationNewRoomItems(result.newRoomItems || []);
     setIsCelebrationModalOpen(true);
   };
 
@@ -266,6 +269,8 @@ export default function App() {
               starsCount={playerProgress.starsCount}
               onAddStars={handleAddStars}
               onOpenCelebrationModal={() => setIsCelebrationModalOpen(true)}
+              onGoToMundos={() => handleTabChange('mundos')}
+              onGoToCuentos={() => handleTabChange('cuentos')}
             />
           )}
 
@@ -353,7 +358,7 @@ export default function App() {
             <span className="text-xs font-black">Cuentos</span>
           </button>
 
-          {/* 3. Premios (Álbum de Logros y Stickers) */}
+          {/* 3. Mi Cuarto & Premios (Avatar World & Álbum) */}
           <button
             onClick={() => handleTabChange('premios')}
             aria-current={activeTab === 'premios' ? 'page' : undefined}
@@ -371,9 +376,9 @@ export default function App() {
                 fontVariationSettings: activeTab === 'premios' ? "'FILL' 1" : "'FILL' 0",
               }}
             >
-              featured_seasonal_and_gifts
+              cottage
             </span>
-            <span className="text-xs font-black">Premios</span>
+            <span className="text-xs font-black">Mi Cuarto</span>
           </button>
         </div>
       </nav>
@@ -424,10 +429,18 @@ export default function App() {
             onClose={() => {
               setIsCelebrationModalOpen(false);
               setCelebrationWorldId(null);
+              setCelebrationNewRoomItems([]);
             }}
             onGoToAlbum={() => {
               setIsCelebrationModalOpen(false);
               setCelebrationWorldId(null);
+              setCelebrationNewRoomItems([]);
+              handleTabChange('premios');
+            }}
+            onGoToRoom={() => {
+              setIsCelebrationModalOpen(false);
+              setCelebrationWorldId(null);
+              setCelebrationNewRoomItems([]);
               handleTabChange('premios');
             }}
             onAddStars={handleAddStars}
@@ -437,6 +450,7 @@ export default function App() {
             starsCount={playerProgress.starsCount}
             unlockedStickerName={activeCelebrationWorld ? `Sticker ${activeCelebrationWorld.targetWord}` : undefined}
             unlockedStickerEmoji={activeCelebrationWorld?.targetEmoji}
+            newRoomItems={celebrationNewRoomItems}
           />
         );
       })()}

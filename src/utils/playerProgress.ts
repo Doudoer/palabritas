@@ -8,9 +8,19 @@
  * - Mastered letters from calligraphy
  * - Learned written words
  * - Daily practice streaks
+ * - Avatar World character & room customization (Avatar World style)
  */
 
 import { WORLDS_DATA } from '../data/worldsData';
+import {
+  AvatarConfig,
+  RoomConfig,
+  RoomCatalogItem,
+  DEFAULT_AVATAR_CONFIG,
+  DEFAULT_ROOM_CONFIG,
+  STARTER_UNLOCKED_ITEMS,
+  AVATAR_ROOM_CATALOG,
+} from '../data/avatarRoomData';
 
 const PROGRESS_STORAGE_KEY = 'palabritas_player_progress_v3';
 
@@ -21,11 +31,15 @@ export interface PlayerProgress {
   unlockedStickers: string[];    // IDs of unlocked stickers
   masteredLetters: string[];     // Letters whose traces have been validated
   learnedWords: string[];        // Words assembled or typed successfully
+  readStoriesCount: number;      // Number of stories read
   streakDays: number;
   lastPlayedDate: string;
-  equippedCostume?: string;      // ID of equipped costume for Chispita (e.g. 'corona_oro')
-  unlockedCostumes?: string[];   // IDs of unlocked Chispita accessories
+  equippedCostume?: string;      // ID of equipped costume for Chispita (legacy)
+  unlockedCostumes?: string[];   // IDs of unlocked Chispita accessories (legacy)
   playerName?: string;           // Optional child's name
+  avatarConfig: AvatarConfig;    // Interactive animated avatar customization
+  roomConfig: RoomConfig;        // Interactive room decoration
+  unlockedRoomItems: string[];   // Items unlocked for avatar and room
 }
 
 export function getTodayDateString(): string {
@@ -38,16 +52,32 @@ export function getTodayDateString(): string {
 
 const DEFAULT_PROGRESS: PlayerProgress = {
   starsCount: 125,
-  completedWorlds: [1], // Mundo 1 (Vocales) completed by default for nice onboarding
-  currentWorldId: 2,  // Mundo 2 (M de Manzana) is active
+  completedWorlds: [1], // Mundo 1 (Familia de la A) completed by default for onboarding
+  currentWorldId: 2,  // Mundo 2 (Familia de la B) is active
   unlockedStickers: ['stk-world-1'],
   masteredLetters: ['A', 'E', 'I', 'O', 'U'],
   learnedWords: ['ALA', 'MAMA', 'OSO'],
+  readStoriesCount: 1,
   streakDays: 3,
   lastPlayedDate: getTodayDateString(),
   equippedCostume: '',
   unlockedCostumes: [],
   playerName: 'Pequeño Campeón',
+  avatarConfig: { ...DEFAULT_AVATAR_CONFIG },
+  roomConfig: { ...DEFAULT_ROOM_CONFIG },
+  unlockedRoomItems: [
+    ...STARTER_UNLOCKED_ITEMS,
+    // Since World 1 is completed by default:
+    'bed-cloud',
+    'pet-kitty',
+    'wall-pink',
+    'outfit-overalls',
+    'rug-star',
+    'head-bow',
+    'hand-teddy',
+    'decor-clock',
+    'floor-tiles',
+  ],
 };
 
 export function loadPlayerProgress(): PlayerProgress {
@@ -69,6 +99,33 @@ export function loadPlayerProgress(): PlayerProgress {
     const maxPossible = WORLDS_DATA.length;
     const currentWorldId = parsed.currentWorldId || Math.min(maxPossible, maxCompleted + 1);
 
+    // Ensure room items contain starter items + any earned by completed worlds
+    const unlockedRoomItemsSet = new Set<string>(
+      Array.isArray(parsed.unlockedRoomItems) && parsed.unlockedRoomItems.length > 0
+        ? parsed.unlockedRoomItems
+        : STARTER_UNLOCKED_ITEMS
+    );
+
+    // Auto-grant items for worlds already completed in saved state
+    for (const wId of completedWorlds) {
+      for (const item of AVATAR_ROOM_CATALOG) {
+        if (item.unlockType === 'world' && item.requiredWorldId === wId) {
+          unlockedRoomItemsSet.add(item.id);
+        }
+      }
+    }
+
+    // Merge avatar and room configs with defaults safely
+    const avatarConfig: AvatarConfig = {
+      ...DEFAULT_AVATAR_CONFIG,
+      ...(parsed.avatarConfig || {}),
+    };
+
+    const roomConfig: RoomConfig = {
+      ...DEFAULT_ROOM_CONFIG,
+      ...(parsed.roomConfig || {}),
+    };
+
     const progress: PlayerProgress = {
       starsCount: typeof parsed.starsCount === 'number' ? parsed.starsCount : 125,
       completedWorlds,
@@ -78,11 +135,15 @@ export function loadPlayerProgress(): PlayerProgress {
         : ['stk-world-1'],
       masteredLetters: Array.isArray(parsed.masteredLetters) ? parsed.masteredLetters : ['A', 'E', 'I', 'O', 'U'],
       learnedWords: Array.isArray(parsed.learnedWords) ? parsed.learnedWords : ['ALA', 'MAMA', 'OSO'],
+      readStoriesCount: typeof parsed.readStoriesCount === 'number' ? parsed.readStoriesCount : 1,
       streakDays: typeof parsed.streakDays === 'number' ? parsed.streakDays : 3,
       lastPlayedDate: today,
       equippedCostume: typeof parsed.equippedCostume === 'string' ? parsed.equippedCostume : '',
       unlockedCostumes: Array.isArray(parsed.unlockedCostumes) ? parsed.unlockedCostumes : [],
       playerName: typeof parsed.playerName === 'string' && parsed.playerName ? parsed.playerName : 'Pequeño Campeón',
+      avatarConfig,
+      roomConfig,
+      unlockedRoomItems: Array.from(unlockedRoomItemsSet),
     };
 
     return progress;
@@ -113,6 +174,7 @@ export function completePlayerWorld(worldId: number): {
   isNewCompletion: boolean;
   nextWorldId: number;
   newStickerId?: string;
+  newRoomItems: RoomCatalogItem[];
   updatedProgress: PlayerProgress;
 } {
   const current = loadPlayerProgress();
@@ -129,7 +191,7 @@ export function completePlayerWorld(worldId: number): {
     current.currentWorldId = nextWorldId;
   }
 
-  // Bonus sticker for completing a world!
+  // Bonus sticker for completing a world
   const stickerId = `stk-world-${worldId}`;
   let newStickerId: string | undefined = undefined;
   if (!current.unlockedStickers.includes(stickerId)) {
@@ -137,8 +199,23 @@ export function completePlayerWorld(worldId: number): {
     newStickerId = stickerId;
   }
 
-  // Reward stars on world completion (20 stars for new completion, 5 for review)
-  current.starsCount += isNewCompletion ? 20 : 5;
+  // Unlock Avatar & Room Items tied to this world!
+  const newRoomItems: RoomCatalogItem[] = [];
+  const existingSet = new Set(current.unlockedRoomItems);
+
+  for (const item of AVATAR_ROOM_CATALOG) {
+    if (item.unlockType === 'world' && item.requiredWorldId === worldId) {
+      if (!existingSet.has(item.id)) {
+        existingSet.add(item.id);
+        newRoomItems.push(item);
+      }
+    }
+  }
+
+  current.unlockedRoomItems = Array.from(existingSet);
+
+  // Reward stars on world completion (25 stars for new completion, 5 for review)
+  current.starsCount += isNewCompletion ? 25 : 5;
   current.lastPlayedDate = getTodayDateString();
 
   savePlayerProgress(current);
@@ -147,6 +224,7 @@ export function completePlayerWorld(worldId: number): {
     isNewCompletion,
     nextWorldId,
     newStickerId,
+    newRoomItems,
     updatedProgress: current,
   };
 }
@@ -161,37 +239,159 @@ export function claimPlayerSticker(stickerId: string): boolean {
   return true;
 }
 
-export function markLetterMastered(letter: string): { isNew: boolean; totalMastered: number } {
+export function markLetterMastered(letter: string): {
+  isNew: boolean;
+  totalMastered: number;
+  newRoomItems: RoomCatalogItem[];
+} {
   const upper = letter.toUpperCase();
   const current = loadPlayerProgress();
   const isNew = !current.masteredLetters.includes(upper);
+  const newRoomItems: RoomCatalogItem[] = [];
 
   if (isNew) {
     current.masteredLetters.push(upper);
     current.starsCount += 5; // Reward 5 stars for learning a new letter stroke
+
+    // Check letter milestone unlocks
+    const existingSet = new Set(current.unlockedRoomItems);
+    const count = current.masteredLetters.length;
+
+    for (const item of AVATAR_ROOM_CATALOG) {
+      if (item.unlockType === 'letters' && item.requiredLettersCount && count >= item.requiredLettersCount) {
+        if (!existingSet.has(item.id)) {
+          existingSet.add(item.id);
+          newRoomItems.push(item);
+        }
+      }
+    }
+    current.unlockedRoomItems = Array.from(existingSet);
+
     savePlayerProgress(current);
   }
 
-  return { isNew, totalMastered: current.masteredLetters.length };
+  return { isNew, totalMastered: current.masteredLetters.length, newRoomItems };
 }
 
-export function markWordLearned(word: string): { isNew: boolean; totalLearned: number } {
+export function markWordLearned(word: string): {
+  isNew: boolean;
+  totalLearned: number;
+  newRoomItems: RoomCatalogItem[];
+} {
   const upper = word.toUpperCase();
   const current = loadPlayerProgress();
   const isNew = !current.learnedWords.includes(upper);
+  const newRoomItems: RoomCatalogItem[] = [];
 
   if (isNew) {
     current.learnedWords.push(upper);
     current.starsCount += 5; // Reward 5 stars for spelling a new word
+
+    // Check word milestone unlocks
+    const existingSet = new Set(current.unlockedRoomItems);
+    const count = current.learnedWords.length;
+
+    for (const item of AVATAR_ROOM_CATALOG) {
+      if (item.unlockType === 'words' && item.requiredWordsCount && count >= item.requiredWordsCount) {
+        if (!existingSet.has(item.id)) {
+          existingSet.add(item.id);
+          newRoomItems.push(item);
+        }
+      }
+    }
+    current.unlockedRoomItems = Array.from(existingSet);
+
     savePlayerProgress(current);
   }
 
-  return { isNew, totalLearned: current.learnedWords.length };
+  return { isNew, totalLearned: current.learnedWords.length, newRoomItems };
+}
+
+export function markStoryRead(): {
+  isNewStory: boolean;
+  totalStoriesRead: number;
+  newRoomItems: RoomCatalogItem[];
+} {
+  const current = loadPlayerProgress();
+  current.readStoriesCount = (current.readStoriesCount || 0) + 1;
+  current.starsCount += 10; // Reward 10 stars for reading a story
+  const newRoomItems: RoomCatalogItem[] = [];
+
+  const existingSet = new Set(current.unlockedRoomItems);
+  const count = current.readStoriesCount;
+
+  for (const item of AVATAR_ROOM_CATALOG) {
+    if (item.unlockType === 'stories' && item.requiredStoriesCount && count >= item.requiredStoriesCount) {
+      if (!existingSet.has(item.id)) {
+        existingSet.add(item.id);
+        newRoomItems.push(item);
+      }
+    }
+  }
+  current.unlockedRoomItems = Array.from(existingSet);
+  savePlayerProgress(current);
+
+  return { isNewStory: true, totalStoriesRead: current.readStoriesCount, newRoomItems };
 }
 
 export function isWorldUnlocked(worldId: number, completedWorlds: number[]): boolean {
   if (worldId === 1) return true; // World 1 is always unlocked
   return completedWorlds.includes(worldId - 1) || completedWorlds.includes(worldId);
+}
+
+// Avatar World Customization Helpers
+export function updateAvatarConfig(partial: Partial<AvatarConfig>): AvatarConfig {
+  const current = loadPlayerProgress();
+  current.avatarConfig = {
+    ...current.avatarConfig,
+    ...partial,
+  };
+  savePlayerProgress(current);
+  return current.avatarConfig;
+}
+
+export function updateRoomConfig(partial: Partial<RoomConfig>): RoomConfig {
+  const current = loadPlayerProgress();
+  current.roomConfig = {
+    ...current.roomConfig,
+    ...partial,
+  };
+  savePlayerProgress(current);
+  return current.roomConfig;
+}
+
+export function unlockRoomItem(itemId: string): boolean {
+  const current = loadPlayerProgress();
+  if (current.unlockedRoomItems.includes(itemId)) {
+    return false;
+  }
+  current.unlockedRoomItems.push(itemId);
+  savePlayerProgress(current);
+  return true;
+}
+
+export function buyRoomItem(itemId: string, cost: number): {
+  success: boolean;
+  newTotalStars: number;
+  message: string;
+} {
+  const current = loadPlayerProgress();
+  if (current.unlockedRoomItems.includes(itemId)) {
+    return { success: true, newTotalStars: current.starsCount, message: '¡Ya tienes este objeto desbloqueado!' };
+  }
+  if (current.starsCount < cost) {
+    return {
+      success: false,
+      newTotalStars: current.starsCount,
+      message: `Necesitas ${cost} estrellas para desbloquearlo. Tienes ${current.starsCount}.`,
+    };
+  }
+
+  current.starsCount -= cost;
+  current.unlockedRoomItems.push(itemId);
+  savePlayerProgress(current);
+
+  return { success: true, newTotalStars: current.starsCount, message: '¡Objeto desbloqueado con éxito!' };
 }
 
 export function buyPlayerCostume(costumeId: string, cost: number): { success: boolean; newTotalStars: number; message: string } {
@@ -229,7 +429,6 @@ export function calculatePlayerLevel(stars: number, completedWorldsCount: number
   progressPercent: number;
   nextLevelThreshold: number;
 } {
-  // Levels based on both stars and completed worlds
   if (completedWorldsCount >= 15 || stars >= 350) {
     return { level: 5, title: 'Gran Sabio de las Palabras', progressPercent: 100, nextLevelThreshold: 400 };
   }
@@ -253,4 +452,3 @@ export function resetPlayerProgressForTesting(): PlayerProgress {
   savePlayerProgress(DEFAULT_PROGRESS);
   return { ...DEFAULT_PROGRESS };
 }
-

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ALL_STORIES, DecodableStory } from '../data/cuentosData';
 import { ASSETS } from '../data/appData';
 import { playPop, playSparkleChime, speakSpanish, triggerHaptic } from '../utils/audio';
+import { markStoryRead } from '../utils/playerProgress';
 
 interface CuentosScreenProps {
   onBackToMap: () => void;
@@ -95,8 +96,13 @@ export const CuentosScreen: React.FC<CuentosScreenProps> = ({
       onAddStars(5);
       playSparkleChime();
     } else if (selectedStoryId < ALL_STORIES.length) {
-      // Go to next story
+      // Finished story!
+      markStoryRead();
       handleSelectStory(selectedStoryId + 1);
+      onAddStars(10);
+      playSparkleChime();
+    } else {
+      markStoryRead();
       onAddStars(10);
       playSparkleChime();
     }

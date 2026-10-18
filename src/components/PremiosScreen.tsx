@@ -29,20 +29,27 @@ import {
   calculatePlayerLevel,
   PlayerProgress,
 } from '../utils/playerProgress';
+import { AvatarRoomView } from './AvatarRoomView';
 
 interface PremiosScreenProps {
   starsCount: number;
   onAddStars: (amount: number) => void;
   onOpenCelebrationModal: () => void;
+  onGoToMundos?: () => void;
+  onGoToCuentos?: () => void;
+  initialTab?: 'cuarto' | 'album' | 'rasca' | 'tienda';
 }
 
 export const PremiosScreen: React.FC<PremiosScreenProps> = ({
   starsCount,
   onAddStars,
   onOpenCelebrationModal,
+  onGoToMundos,
+  onGoToCuentos,
+  initialTab = 'cuarto',
 }) => {
-  // Navigation tabs within Premios: Album, Rasca & Cofre, Medallas & Tienda
-  const [activeTab, setActiveTab] = useState<'album' | 'rasca' | 'tienda'>('album');
+  // Navigation tabs within Premios: Cuarto (Avatar World), Album, Rasca & Cofre, Chispita
+  const [activeTab, setActiveTab] = useState<'cuarto' | 'album' | 'rasca' | 'tienda'>(initialTab);
 
   // Player progress local state
   const [progress, setProgress] = useState<PlayerProgress>(() => loadPlayerProgress());
@@ -615,8 +622,25 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
         </div>
       </header>
 
-      {/* 3 Chunky Kid-Friendly Sub-Tabs */}
-      <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-[#ffe2d6] rounded-2xl border border-[#ffd0bb]">
+      {/* 4 Chunky Kid-Friendly Sub-Tabs with Mi Cuarto (Avatar World) First! */}
+      <div className="grid grid-cols-4 gap-1.5 p-1.5 bg-[#ffe2d6] rounded-2xl border border-[#ffd0bb]">
+        <button
+          onClick={() => {
+            playPop(420);
+            triggerHaptic(15);
+            setActiveTab('cuarto');
+          }}
+          className={`py-2 px-1 rounded-xl text-xs font-black flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer ${
+            activeTab === 'cuarto'
+              ? 'bg-white text-[#d97706] shadow-[0_3px_0_0_#ffdbcc] scale-102 border border-amber-300'
+              : 'text-[#534434] hover:text-[#351000]'
+          }`}
+          type="button"
+        >
+          <span className="text-[18px]">🏠</span>
+          <span>Mi Cuarto</span>
+        </button>
+
         <button
           onClick={() => {
             playPop(420);
@@ -625,7 +649,7 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
           }}
           className={`py-2 px-1 rounded-xl text-xs font-black flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer ${
             activeTab === 'album'
-              ? 'bg-white text-[#855300] shadow-[0_3px_0_0_#ffdbcc] scale-102'
+              ? 'bg-white text-[#855300] shadow-[0_3px_0_0_#ffdbcc] scale-102 border border-amber-300'
               : 'text-[#534434] hover:text-[#351000]'
           }`}
           type="button"
@@ -642,13 +666,13 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
           }}
           className={`py-2 px-1 rounded-xl text-xs font-black flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer ${
             activeTab === 'rasca'
-              ? 'bg-white text-[#006c49] shadow-[0_3px_0_0_#ffdbcc] scale-102'
+              ? 'bg-white text-[#006c49] shadow-[0_3px_0_0_#ffdbcc] scale-102 border border-emerald-300'
               : 'text-[#534434] hover:text-[#351000]'
           }`}
           type="button"
         >
           <span className="material-symbols-outlined text-[18px]">featured_seasonal_and_gifts</span>
-          <span>Rasca y Cofre</span>
+          <span>Minijuegos</span>
         </button>
 
         <button
@@ -659,15 +683,28 @@ export const PremiosScreen: React.FC<PremiosScreenProps> = ({
           }}
           className={`py-2 px-1 rounded-xl text-xs font-black flex flex-col sm:flex-row items-center justify-center gap-1 transition-all cursor-pointer ${
             activeTab === 'tienda'
-              ? 'bg-white text-[#7c2d12] shadow-[0_3px_0_0_#ffdbcc] scale-102'
+              ? 'bg-white text-[#7c2d12] shadow-[0_3px_0_0_#ffdbcc] scale-102 border border-orange-300'
               : 'text-[#534434] hover:text-[#351000]'
           }`}
           type="button"
         >
           <span className="material-symbols-outlined text-[18px]">checkroom</span>
-          <span>Disfraces ({CHISPITA_COSTUMES.length})</span>
+          <span>Chispita</span>
         </button>
       </div>
+
+      {/* ======================================================== */}
+      {/* SUB-TAB 0: MI CUARTO (AVATAR WORLD)                     */}
+      {/* ======================================================== */}
+      {activeTab === 'cuarto' && (
+        <AvatarRoomView
+          progress={progress}
+          onUpdateProgress={(newProgress) => setProgress(newProgress)}
+          onAddStars={onAddStars}
+          onGoToMundos={onGoToMundos}
+          onGoToCuentos={onGoToCuentos}
+        />
+      )}
 
       {/* ======================================================== */}
       {/* SUB-TAB 1: MI ÁLBUM MÁGICO                              */}
