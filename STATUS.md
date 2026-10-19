@@ -7,7 +7,26 @@
 
 ---
 
-## 📌 Checkpoint Actual: `v0.1.16 - Limpieza Total de Docker en Local y VPS (Aislamiento Exclusivo de Palabritas)`
+## 📌 Checkpoint Actual: `v0.1.17 - Desmantelamiento y Limpieza Total del VPS (Cero Recursos en el Servidor Remoto)`
+- **Fecha:** 18 de Octubre, 2026 (19:25 UTC-4)
+- **Estado General:** ✅ VPS `167.235.21.59` completamente limpio. Ningún servicio, contenedor ni archivo de Palabritas corriendo en remoto.
+  1. **Servicios y Timers Removidos:**
+     - Se detuvieron y deshabilitaron `palabritas-sync.timer` y `palabritas-sync.service`.
+     - Se eliminaron los archivos `/etc/systemd/system/palabritas-sync.*` y se recargó systemd.
+  2. **Docker en VPS 100% Vaciado:**
+     - Se detuvo y eliminó el contenedor `palabritas-app`.
+     - Se eliminaron todas las imágenes de Docker (`palabritas:latest`, etc.).
+     - Se ejecutó `docker system prune -a --volumes -f`, recuperando todo el espacio.
+     - Docker en el VPS tiene ahora 0 contenedores, 0 imágenes y 0 volúmenes.
+  3. **Directorio de la Aplicación:**
+     - Se eliminó `/opt/palabritas` en su totalidad.
+  4. **Puertos y Red:**
+     - Los puertos 80 y 3000 quedaron cerrados. Únicamente el puerto 22 (SSH) sigue escuchando para administración del servidor.
+     - Disco del VPS: 34 GB libres de 38 GB (solo 2.3 GB ocupados por el sistema operativo base).
+
+---
+
+## 📌 Checkpoint Anterior: `v0.1.16 - Limpieza Total de Docker en Local y VPS (Aislamiento Exclusivo de Palabritas)`
 - **Fecha:** 18 de Octubre, 2026 (19:15 UTC-4)
 - **Estado General:** ✅ Docker local limpio (11 GB recuperados) y Docker VPS depurado al 100% (5.35 GB recuperados).
   1. **Docker en el VPS (`167.235.21.59`):**
